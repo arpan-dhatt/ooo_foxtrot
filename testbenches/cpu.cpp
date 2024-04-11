@@ -4,6 +4,7 @@
 #include <cstring>
 #include <sstream>
 #include <fstream>
+#include <elfio/elfio.hpp>
 
 #include "Vcpu.h"
 #include "support/memory.h"
