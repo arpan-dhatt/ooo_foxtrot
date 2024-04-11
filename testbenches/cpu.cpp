@@ -87,10 +87,10 @@ int main(int argc, char** argv) {
         // Set the read data and mem_ren signal
         auto read_data = memory.get_read_data();
         if (read_data.has_value()) {
-            cpu->mem_rready = 1;
+            cpu->mem_rvalid = 1;
             cpu->mem_rdata = read_data.value();
         } else {
-            cpu->mem_rready = 0;
+            cpu->mem_rvalid = 0;
         }
     }
 
