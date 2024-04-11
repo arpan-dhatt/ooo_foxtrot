@@ -6,7 +6,7 @@ module cpu(
     output logic done,              // Indicates when the CPU has finished execution
     output logic mem_ren,           // Memory read enable signal
     output logic [63:0] mem_raddr,  // Memory read address
-    input logic mem_rready,         // Indicates when memory read data is ready
+    input logic mem_rvalid,         // Indicates when memory read data is valid
     input logic [63:0] mem_rdata,   // Memory read data
     output logic mem_wen,           // Memory write enable signal
     output logic [63:0] mem_waddr,  // Memory write address

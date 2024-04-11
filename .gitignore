@@ -7,3 +7,6 @@ cmake-build-*/
 
 # Build artifacts
 build/
+
+# VSCode
+.vscode/

@@ -10,7 +10,8 @@ Before building and running the project, make sure you have the following depend
 - CMake (version 3.27 or higher)
 - Verilator
 - C++ compiler supporting C++17
-- `ld.lld`: installable via apt on linux or `brew install llvm` on macOS
+- `ld.lld`: installable via apt on linux or `brew install llvm` on macOS. Not necessary if you are not compiling new
+  programs and using existing ELF's in testcases.
 
 ## Building the Project
 
@@ -44,6 +45,11 @@ cmake --build .
 ```
 
 This will compile the SystemVerilog sources and generate the executable files for the testbenches.
+
+## Adding Additional SystemVerilog Code
+
+All `.sv` files in existing directories inside `src/` are included for verilator, but if you create a new directory, even
+if it's a subdirectory of an existing one, you must add it to `SV_DIRECTORIES` in the `CMakeLists.txt` file.
 
 ## Running Testbenches
 
