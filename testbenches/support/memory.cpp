@@ -2,7 +2,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cstring>
+#include <cassert>
+#include <elfio/elfio.hpp>
 
 Memory::Memory(size_t size, size_t latency)
         : size(size), latency(latency) {
@@ -14,11 +17,43 @@ Memory::~Memory() {
     delete[] data;
 }
 
-void Memory::load_from_file(const std::string& file_path) {
+void Memory::load_memory(const std::string& file_path) {
     std::ifstream mem_file(file_path, std::ios::binary);
     if (mem_file.is_open()) {
         mem_file.read(reinterpret_cast<char*>(data), size);
         mem_file.close();
+    }
+}
+
+void Memory::load_elf(const std::string& file_path) {
+    ELFIO::elfio reader;
+    // Load ELF data
+    if (!reader.load(file_path)) {
+        std::ostringstream msg;
+        msg << "Can't find or process ELF file " << file_path;
+        throw std::runtime_error(msg.str());
+    }
+
+    ELFIO::Elf_Half seg_num = reader.segments.size();
+    std::cout << "Number of segments: " << seg_num << std::endl;
+    for (int i = 0; i < seg_num; ++i) {
+        const ELFIO::segment *pseg = reader.segments[i];
+        std::cout << " [" << i << "] 0x" << std::hex << pseg->get_flags() << "\t0x"
+                  << pseg->get_virtual_address() << "\t0x" << pseg->get_file_size()
+                  << "\t0x" << pseg->get_memory_size() << std::endl;
+        // Access segments' data
+        const char *p = reader.segments[i]->get_data();
+        // Copy data to mem
+        if (pseg->get_type() == ELFIO::PT_LOAD) {
+            if (pseg->get_virtual_address() + pseg->get_file_size() > (size)) {
+                std::ostringstream msg;
+                msg << "Segment cannot fit in data buffer: " << pseg->get_type();
+                throw std::runtime_error(msg.str());
+            }
+            std::memcpy(reinterpret_cast<uint8_t *>(data) +
+                        pseg->get_virtual_address(),
+                        p, pseg->get_file_size());
+        }
     }
 }
 

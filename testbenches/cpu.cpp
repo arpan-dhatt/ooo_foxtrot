@@ -4,7 +4,6 @@
 #include <cstring>
 #include <sstream>
 #include <fstream>
-#include <elfio/elfio.hpp>
 
 #include "Vcpu.h"
 #include "support/memory.h"
@@ -17,6 +16,7 @@ int main(int argc, char** argv) {
 
     std::string directory_path = argv[1];
     std::string mem_file_path = directory_path + "/mem.bin";
+    std::string elf_file_path = directory_path + "/prog.elf";
     std::string mem_cmp_file_path = directory_path + "/mem_cmp.txt";
     std::string mmio_file_path = directory_path + "/mmio.txt";
 
@@ -31,9 +31,14 @@ int main(int argc, char** argv) {
     Memory memory(MEMORY_SIZE, MEMORY_LATENCY);
 
     // Load memory contents from file if it exists
-    if (std::ifstream(mem_file_path).good()) {
+    if (std::ifstream(elf_file_path).good()) {
+        std::cout << "Loading ELF file (ignoring .bin file):" << elf_file_path << std::endl;
+        memory.load_elf(elf_file_path);
+    } else if (std::ifstream(mem_file_path).good()) {
         std::cout << "Loading memory from file: " << mem_file_path << std::endl;
-        memory.load_from_file(mem_file_path);
+        memory.load_memory(mem_file_path);
+    } else {
+        throw std::invalid_argument("Neither ELF nor .bin file exist");
     }
 
     // Reset

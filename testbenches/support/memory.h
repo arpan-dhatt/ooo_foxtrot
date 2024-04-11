@@ -18,7 +18,8 @@ public:
     Memory(size_t size, size_t latency);
     ~Memory();
 
-    void load_from_file(const std::string& file_path);
+    void load_memory(const std::string& file_path);
+    void load_elf(const std::string& file_path);
     void write(uint64_t addr, uint64_t value);
     void read(uint64_t addr);
     void update();
