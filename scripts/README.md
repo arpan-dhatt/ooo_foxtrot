@@ -1,6 +1,8 @@
 # Binary File Manipulation Scripts
+
 This repository contains two Python scripts for manipulating binary files:
 `apply_changes.py`: Applies changes specified in a text file to a binary file.
+
 ```
 Usage: python apply_changes.py [options] <dest.bin> <input.bin> <changes.txt>
 
@@ -35,6 +37,7 @@ Note: The script overwrites the output file if it already exists.
 ```
 
 `create_zeros_file.py`: Creates a binary file filled with zeros of a specified size.
+
 ```
 Usage: python create_zeros_file.py [options] <output_file>
 
