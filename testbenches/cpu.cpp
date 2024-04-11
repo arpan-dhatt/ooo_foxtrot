@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     auto* const cpu = new Vcpu{contextp};
 
     // Create memory instance
-    constexpr size_t MEMORY_SIZE = 64 * 1024;  // 64 KiB
+    constexpr size_t MEMORY_SIZE = 4 * 1024;  // 4 KiB
     constexpr size_t MEMORY_LATENCY = 10;  // 10 cycles latency
     Memory memory(MEMORY_SIZE, MEMORY_LATENCY);
 

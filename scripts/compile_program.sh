@@ -13,12 +13,17 @@ output_file="$2"
 # Check if the linker script is provided
 if [ $# -eq 3 ]; then
   linker_script="$3"
-  linker_option="-T $linker_script"
 else
-  linker_option=""
+  linker_script=""
 fi
 
 # Compile the assembly file
-as --target=aarch64-none-elf "$input_file" $linker_option -o "$output_file"
+as --target=aarch64-none-elf "$input_file" $linker_option -o "$output_file.o"
+
+# link with lld
+ld.lld "$output_file.o" $linker_script -o $output_file
+
+# remove intermediate file
+rm "$output_file.o"
 
 echo "Assembly file compiled successfully."
