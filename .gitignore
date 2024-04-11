@@ -1,0 +1,9 @@
+# CLion
+.idea/
+cmake-build-*/
+
+# macOS
+.DS_Store
+
+# Build artifacts
+build/
