@@ -23,6 +23,7 @@ def parse_changes(changes_file):
 
     return changes
 
+
 def apply_changes(input_file, output_file, changes):
     shutil.copy2(input_file, output_file)
 
