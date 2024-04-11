@@ -15,11 +15,12 @@ Before building and running the project, make sure you have the following depend
 
 To build the project, follow these steps:
 
-1. Clone the repository:
+1. Clone the repository and init submodules:
 
 ```
 git clone <repository_url>
 cd ooo_foxtrot
+git submodule update --init --recursive
 ```
 
 2. Create a build directory and navigate to it:
