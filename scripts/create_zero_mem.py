@@ -14,16 +14,17 @@ def create_zeros_file(output_file, size):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python create_zeros_file.py <output_file>")
+    if len(sys.argv) != 3:
+        print("Usage: python create_zeros_file.py <output_file> <log2(mem size)>")
         sys.exit(1)
 
     output_file = sys.argv[1]
 
-    # Size of the binary file in bytes (64 KiB)
-    size = 64 * 1024
+    # Size of the binary file in bytes
+    size = 2**int(sys.argv[2])
 
     create_zeros_file(output_file, size)
+
 
 if __name__ == '__main__':
     main()

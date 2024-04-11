@@ -49,12 +49,12 @@ Options:
 Arguments:
 <output_file>  The path to the output binary file to be created
 
-The script will create a binary file at the specified <output_file> path, filled with zeros. The size of the file is fixed at 64 KiB (65,536 bytes).
+The script will create a binary file at the specified <output_file> path, filled with zeros.
 
 Example usage:
-python create_zeros_file.py zeros.bin
+python create_zeros_file.py zeros.bin 12
 
-This will create a binary file named 'zeros.bin' in the current directory, containing 64 KiB of zeros.
+This will create a binary file named 'zeros.bin' in the current directory, containing 4 KiB of zeros.
 
 Note: The script overwrites the output file if it already exists.
 ```
