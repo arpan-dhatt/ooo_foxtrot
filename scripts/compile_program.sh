@@ -20,8 +20,14 @@ fi
 # Compile the assembly file
 as --target=aarch64-none-elf "$input_file" $linker_option -o "$output_file.o"
 
-# link with lld
-ld.lld "$output_file.o" $linker_script -o $output_file
+# Link with LLD
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS
+  /opt/homebrew/opt/llvm/bin/ld.lld "$output_file.o" $linker_script -o "$output_file"
+else
+  # Other operating systems
+  ld.lld "$output_file.o" $linker_script -o "$output_file"
+fi
 
 # remove intermediate file
 rm "$output_file.o"

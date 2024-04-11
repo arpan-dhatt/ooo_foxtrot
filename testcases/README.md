@@ -8,7 +8,8 @@ Testcases are directories including the following:
 4. `mmio.txt`: a text file to compare the MMIO output from the CPU with
 
 Only one of `prog.elf` or `mem.bin` are required to run. `prog.elf` is prioritized over `mem.bin`. `prog.elf` can be
-compiled via the `script/compile_program.sh` script from a `.s` file.
+compiled via the `script/compile_program.sh` script from a `.s` file. Make sure you use the `scripts/linker_script.ld`
+in the shell script arguments.
 
 `mem_cmp.txt` should be in the following format:
 

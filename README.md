@@ -10,6 +10,7 @@ Before building and running the project, make sure you have the following depend
 - CMake (version 3.27 or higher)
 - Verilator
 - C++ compiler supporting C++17
+- `ld.lld`: installable via apt on linux or `brew install llvm` on macOS
 
 ## Building the Project
 
@@ -82,3 +83,8 @@ verilate(Vnew_testbench SOURCES src/new_module.sv INCLUDE_DIRS src/ TOP new_modu
 ```
 ./Vnew_testbench
 ```
+
+## Testcases
+
+Testcases are available in `testcases/` directory with an additional `README.md` for their format. They can be passed
+into the `Vcpu` testbench to load and run the CPU.
