@@ -21,25 +21,26 @@ interface fu_if #(
   typedef struct {
     logic [PRN_BITS-1:0] prn;    // Output physical register number
     logic [63:0]         data;   // Output data
-    logic                valid;  // Output valid
+    logic                valid;  // Output prn/data valid
   } out_t;
 
   // Output arguments
   out_t out[MAX_OPERANDS];  // Output data and PRNs
   logic [INST_ID_BITS-1:0] out_inst_id;  // Output instruction ID
+  logic out_valid;           // FU output valid 
 
   // Modport for the FU
   modport fu(
       input clk, rst,
       input inst_id, inst, op, out_prn, pc, inst_valid,
-      output out, out_inst_id
+      output out, out_inst_id, out_valid
   );
 
-  // Modport for the issue/dispatch unit
-  modport issue(
+  // Modport for controlling FU
+  modport ctrl(
       input clk, rst,
       output inst_id, inst, op, out_prn, pc, inst_valid,
-      input out, out_inst_id
+      input out, out_inst_id, out_valid
   );
 
 endinterface
