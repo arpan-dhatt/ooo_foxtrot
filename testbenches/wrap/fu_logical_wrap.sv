@@ -17,9 +17,10 @@ module fu_logical_wrap #(
     input logic inst_valid,
 
     // Output arguments
-    output logic [63:0] out_data[MAX_OPERANDS],
-    output logic out_data_valid[MAX_OPERANDS],
-    output logic [INST_ID_BITS-1:0] out_inst_id,
+    output logic [PRN_BITS-1:0] fu_out_prn[MAX_OPERANDS],
+    output logic [63:0] fu_out_data[MAX_OPERANDS],
+    output logic fu_out_data_valid[MAX_OPERANDS],
+    output logic [INST_ID_BITS-1:0] fu_out_inst_id,
     output logic fu_out_valid
 );
 
@@ -42,9 +43,10 @@ module fu_logical_wrap #(
   assign fu_if_inst.inst_valid = inst_valid;
 
   // Connect the output arguments from the fu_if.ctrl ports
-  assign out_data = fu_if_inst.out_data;
-  assign out_data_valid = fu_if_inst.out_data_valid;
-  assign out_inst_id = fu_if_inst.out_inst_id;
+  assign fu_out_prn = fu_if_inst.fu_out_prn;
+  assign fu_out_data = fu_if_inst.fu_out_data;
+  assign fu_out_data_valid = fu_if_inst.fu_out_data_valid;
+  assign fu_out_inst_id = fu_if_inst.fu_out_inst_id;
   assign fu_out_valid = fu_if_inst.fu_out_valid;
 
   // Instantiate the fu_logical module
