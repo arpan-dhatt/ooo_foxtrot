@@ -18,30 +18,24 @@ logic [PRN_BITS-1:0] out_prn[MAX_OPERANDS];  // Output physical register numbers
 logic [63:0] pc;  // Program counter
 logic inst_valid;  // Indicates if input data is valid
 
-// Output struct
-typedef struct {
-    logic [PRN_BITS-1:0] prn;    // Output physical register number
-    logic [63:0]         data;   // Output data
-    logic                valid;  // Output prn/data valid
-} out_t;
-
 // Output arguments
-out_t out[MAX_OPERANDS];  // Output data and PRNs
+logic [63:0] out_data[MAX_OPERANDS]; // resp. output data for prn
+logic out_data_valid[MAX_OPERANDS]; // resp. output is valid
 logic [INST_ID_BITS-1:0] out_inst_id;  // Output instruction ID
-logic out_valid;           // FU output valid
+logic fu_out_valid;           // FU output valid
 
 // Modport for the FU
 modport fu(
     input clk, rst,
     input inst_id, inst, op, out_prn, pc, inst_valid,
-    output out, out_inst_id, out_valid
+    output out_data, out_data_valid, out_inst_id, fu_out_valid
 );
 
 // Modport for controlling FU
 modport ctrl(
     input clk, rst,
     output inst_id, inst, op, out_prn, pc, inst_valid,
-    input out, out_inst_id, out_valid
+    input out_data, out_data_valid, out_inst_id, fu_out_valid
 );
 
 endinterface
