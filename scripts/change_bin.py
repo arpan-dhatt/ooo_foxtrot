@@ -2,6 +2,7 @@ import sys
 import struct
 import shutil
 
+
 def parse_changes(changes_file):
     changes = {}
     current_address = None
@@ -32,6 +33,7 @@ def apply_changes(input_file, output_file, changes):
                 data = struct.pack('<Q', value)
                 outfile.write(data)
 
+
 def main():
     if len(sys.argv) != 4:
         print("Usage: python apply_changes.py <dest.bin> <input.bin> <changes.txt>")
@@ -45,6 +47,7 @@ def main():
     apply_changes(input_file, dest_file, changes)
 
     print(f"Changes applied. Modified binary file saved as {dest_file}.")
+
 
 if __name__ == '__main__':
     main()

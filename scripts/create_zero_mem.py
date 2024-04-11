@@ -1,6 +1,7 @@
 import sys
 import os
 
+
 def create_zeros_file(output_file, size):
     # Create a bytes object filled with zeros
     data = b'\x00' * size
@@ -10,6 +11,7 @@ def create_zeros_file(output_file, size):
         file.write(data)
 
     print(f"Binary file '{output_file}' created with {size} bytes of zeros.")
+
 
 def main():
     if len(sys.argv) != 2:
