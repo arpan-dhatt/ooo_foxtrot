@@ -48,7 +48,8 @@ This will compile the SystemVerilog sources and generate the executable files fo
 
 ## Adding Additional SystemVerilog Code
 
-All `.sv` files in existing directories inside `src/` are included for verilator, but if you create a new directory, even
+All `.sv` files in existing directories inside `src/` are included for verilator, but if you create a new directory,
+even
 if it's a subdirectory of an existing one, you must add it to `SV_DIRECTORIES` in the `CMakeLists.txt` file.
 
 ## Running Testbenches
@@ -75,12 +76,14 @@ To add a new testbench to the project, follow these steps:
 
 1. Create a new C++ testbench file in the `testbenches` directory, for example, `testbenches/new_testbench.cpp`.
 2. In the `CMakeLists.txt` file, add the following lines to define the new testbench executable and its corresponding
-   SystemVerilog sources. Add any additional `.cpp` files that are needed to compile the executable, if necessary (
-   e.g. `testbenches/support/memory.cpp`):
+   SystemVerilog sources. Add any additional `.cpp` files to the `add_executable` function that are needed to compile
+   the executable, if necessary (
+   e.g. `testbenches/support/memory.cpp`). You may not need to have `${SV_WRAPPERS}` in `SOURCES` if you don't need a
+   wrapper:
 
 ```cmake
 add_executable(Vnew_testbench testbenches/new_testbench.cpp)
-verilate(Vnew_testbench SOURCES src/new_module.sv INCLUDE_DIRS src/ TOP new_module)
+verilate(Vnew_testbench PREFIX Vnew_testbench SOURCES ${SV_SOURCES} ${SV_WRAPPERS} TOP_MODULE new_module INCLUDE_DIRS .)
 ```
 
 3. Save the `CMakeLists.txt` file.
