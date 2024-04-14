@@ -46,11 +46,6 @@ cmake --build .
 
 This will compile the SystemVerilog sources and generate the executable files for the testbenches.
 
-## Adding Additional SystemVerilog Code
-
-All `.sv` files in existing directories inside `src/` are included for verilator, but if you create a new directory,
-even
-if it's a subdirectory of an existing one, you must add it to `SV_DIRECTORIES` in the `CMakeLists.txt` file.
 
 ## Running Testbenches
 
