@@ -11,21 +11,18 @@ module lsu(fu_if iface,
         if (iface.inst_valid) begin
             if (iface.inst[31:21] === 11'b11111000010) begin // ldur
                 mem_raddr <= op[0] + iface.inst[20:12];
-                while(!mem_rvalid);
                 iface.out[0].data <= mem_rdata;
-                iface.out[0].valid <= 1;
+                iface.out[0].valid <= mem_rvalid;
             end else if (iface.inst[31:21] === 11'b11111000000) begin // stur
                 mem_waddr <= op[0] + iface.inst[20:12];
                 mem_wdata <= op[1];
             end else if (iface.inst[31:22] === 10'b1010100011) begin // ldp
                 mem_raddr <= op[0] + iface.inst[21:15];
-                while(!mem_rvalid);
                 iface.out[0].data <= mem_rdata;
-                iface.out[0].valid <= 1;
+                iface.out[0].valid <= mem_rvalid;
                 mem_raddr <= op[0] + iface.inst[21:15] + 1;
-                while(!mem_rvalid);
                 iface.out[1].data <= mem_rdata;
-                iface.out[1].valid <= 1
+                iface.out[1].valid <= mem_rvalid;
             end else if (iface.inst[31:22] === 10'b1010100010) begin // stp
                 mem_waddr <= op[0] + iface.inst[21:15];
                 mem_wdata <= op[1];
