@@ -1,12 +1,12 @@
-//
-// Created by Arpan Dhatt on 4/17/24.
-//
-
 #pragma once
 
 #include <array>
 #include <sstream>
 
+/*
+ * struct to hold important testcase inputs. Things like instruction and PC
+ * are separate since they are loaded from ELF file.
+ */
 struct testcase_input {
   std::array<uint64_t, 3> operands;
   std::array<uint8_t, 3> out_prn;
@@ -14,7 +14,11 @@ struct testcase_input {
   testcase_input(std::array<uint64_t, 3> operands,
                  std::array<uint8_t, 3> out_prn) : operands(operands),
                                                    out_prn(out_prn) {}
-
+  /*
+   * this is templated, so you can use this with any verilated module, so long
+   * as it has all the struct members that are expected (look at fu_logical_wrap
+   * to see exactly what.
+   */
   template <typename T>
   void insert(T *fu, uint32_t inst, uint64_t pc) {
       // dummy values
@@ -32,6 +36,9 @@ struct testcase_input {
   }
 };
 
+/*
+ * struct to hold testcase outputs that are checked
+ */
 struct testcase_output {
   std::array<uint8_t, 3> out_prn;
   std::array<uint64_t, 3> fu_out_data;
@@ -44,12 +51,13 @@ struct testcase_output {
       fu_out_data_valid(fu_out_data_valid) {}
 
   template <typename T>
-  void check(T *fu, const testcase_input &inputs, uint32_t inst) {
+  void check(T *fu) {
       // ensured certain values were passed through
       if (fu->fu_out_inst_id != 42) {
           throw std::runtime_error("inst_id wasn't 42!!!!");
       }
 
+      // for each possible output data
       for (int i = 0; i < fu_out_data_valid.size(); i++) {
           // fu_out_data_valid should be an exact match
           if (fu_out_data_valid[i] != fu->fu_out_data_valid[i]) {
@@ -57,7 +65,7 @@ struct testcase_output {
                   "fu_out_data_valid signals should be an exact match with expected");
           }
 
-          // wherever fu_out_data_valid is true, output data and prn should be same
+          // wherever fu_out_data_valid is true, check the output data and prn
           if (fu_out_data_valid[i]) {
               if (fu_out_data[i] != fu->fu_out_data[i]) {
                   std::ostringstream msg;
@@ -66,9 +74,9 @@ struct testcase_output {
                       << fu->fu_out_data[i] << ")";
                   throw std::runtime_error(msg.str());
               }
-              if (inputs.out_prn[i] != fu->fu_out_prn[i]) {
+              if (out_prn[i] != fu->fu_out_prn[i]) {
                   std::ostringstream msg;
-                  msg << "inputs.out_prn[" << i << "](" << inputs.out_prn[i]
+                  msg << "inputs.out_prn[" << i << "](" << out_prn[i]
                       << ") != fu->fu_out_prn[" << i << "]("
                       << fu->fu_out_prn[i] << ")";
                   throw std::runtime_error(msg.str());

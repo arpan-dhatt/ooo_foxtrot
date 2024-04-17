@@ -27,22 +27,21 @@ int main(int argc, char **argv) {
 
     auto *const fu = new Vfu_logical{contextp};
 
-    // Use dummy memory to get all of our instructions
+    // Use dummy memory array to load our ELF into (has instructions we're using)
     // Create memory instance
     constexpr size_t MEMORY_SIZE = 4 * 1024;  // 4 KiB
     constexpr size_t MEMORY_LATENCY = 10;  // 10 cycles latency
     Memory memory(MEMORY_SIZE, MEMORY_LATENCY);
 
-    // Load memory contents from file if it exists
     if (std::ifstream(elf_file_path).good()) {
-        std::cout << "Loading ELF file (ignoring .bin file):" << elf_file_path
+        std::cout << "Loading ELF file:" << elf_file_path
                   << std::endl;
         memory.load_elf(elf_file_path);
     } else {
         throw std::invalid_argument("ELF file doesn't exist");
     }
 
-    // Reset
+    // Reset module
     fu->clk = 0;
     fu->eval();
     fu->rst = 1;
@@ -70,12 +69,13 @@ int main(int argc, char **argv) {
     while (inst != 0xd4400000) {
         std::cout << "Instr [0x" << std::hex << pc << "] " << inst << " ";
 
+        // didn't have a corresponding testcase for this instruction from ELF file
         if (i >= testcases.size()) {
             std::cout << "ABORTED (testcases vector exhausted)" << std::endl;
             break;
         }
 
-        // set values in fu
+        // set input ports for fu
         testcases[i].input.insert(fu, inst, pc);
 
         // cycle clock once to insert this instruction
@@ -84,9 +84,9 @@ int main(int argc, char **argv) {
         fu->clk ^= 1;
         fu->eval();
 
-        // cycle clock until fu_out_valid)
+        // cycle clock until fu_out_valid
         while (!fu->fu_out_valid) {
-            // set inst valid to false to not keep inserting same instruction
+            // set inst_valid to false to not keep inserting same instruction
             fu->inst_valid = false;
             fu->clk ^= 1;
             fu->eval();
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
         }
 
         try {
-            testcases[i].output.check(fu, testcases[i].input, inst);
+            testcases[i].output.check(fu);
             std::cout << "SUCCESS" << std::endl;
         } catch (const std::runtime_error& err) {
 #ifdef EXIT_ON_ERROR
