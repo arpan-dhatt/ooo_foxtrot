@@ -24,6 +24,7 @@ logic [63:0] fu_out_data[MAX_OPERANDS]; // resp. output data for prns
 logic fu_out_data_valid[MAX_OPERANDS]; // resp. output is valid
 logic [INST_ID_BITS-1:0] fu_out_inst_id;  // Output instruction ID
 logic fu_out_valid;           // FU output valid
+logic fu_ready;               // FU ready to receive instruction
 
 // Modport for the FU
 modport fu(

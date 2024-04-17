@@ -21,7 +21,8 @@ module fu_logical_wrap #(
     output logic [63:0] fu_out_data[MAX_OPERANDS],
     output logic fu_out_data_valid[MAX_OPERANDS],
     output logic [INST_ID_BITS-1:0] fu_out_inst_id,
-    output logic fu_out_valid
+    output logic fu_out_valid,
+    output logic fu_ready
 );
 
   // Instantiate the fu_if interface
@@ -48,6 +49,7 @@ module fu_logical_wrap #(
   assign fu_out_data_valid = fu_if_inst.fu_out_data_valid;
   assign fu_out_inst_id = fu_if_inst.fu_out_inst_id;
   assign fu_out_valid = fu_if_inst.fu_out_valid;
+  assign fu_ready = fu_if_inst.fu_ready;
 
   // Instantiate the fu_logical module
   fu_logical fu_logical_inst (
