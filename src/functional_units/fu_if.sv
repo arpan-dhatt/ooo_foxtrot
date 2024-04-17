@@ -30,14 +30,14 @@ logic fu_ready;               // FU ready to receive instruction
 modport fu(
     input clk, rst,
     input inst_id, inst, op, out_prn, pc, inst_valid,
-    output fu_out_prn, fu_out_data, fu_out_data_valid, fu_out_inst_id, fu_out_valid
+    output fu_out_prn, fu_out_data, fu_out_data_valid, fu_out_inst_id, fu_out_valid, fu_ready
 );
 
 // Modport for controlling FU
 modport ctrl(
     input clk, rst,
     output inst_id, inst, op, out_prn, pc, inst_valid,
-    input fu_out_prn, fu_out_data, fu_out_data_valid, fu_out_inst_id, fu_out_valid
+    input fu_out_prn, fu_out_data, fu_out_data_valid, fu_out_inst_id, fu_out_valid, fu_ready
 );
 
 endinterface
