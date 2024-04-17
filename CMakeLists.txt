@@ -21,5 +21,9 @@ target_link_libraries(Vcpu PRIVATE elfio)
 target_include_directories(Vcpu PRIVATE ext/ELFIO)
 verilate(Vcpu PREFIX Vcpu SOURCES ${SV_SOURCES} TOP_MODULE cpu INCLUDE_DIRS .)
 
-add_executable(Vfu_logical testbenches/fu_logical.cpp)
+add_executable(Vfu_logical
+        testbenches/fu_logical.cpp
+        testbenches/support/memory.cpp)
+target_link_libraries(Vfu_logical PRIVATE elfio)
+target_include_directories(Vfu_logical PRIVATE ext/ELFIO)
 verilate(Vfu_logical PREFIX Vfu_logical SOURCES ${SV_SOURCES} ${SV_WRAPPERS} TOP_MODULE fu_logical_wrap INCLUDE_DIRS .)
