@@ -178,27 +178,27 @@ module fu_logical (
         };
       end else if (fu.inst[31:23] == SBFM3123) begin
         // SBFM, ASR
-        $display("BFM Instruction:\n");
-        $display("  imm6r: %0d\n", imm6r);
-        $display("  imm6s: %0d\n", imm6s);
-        $display("  bitfield_size: %0d\n", bitfield_size);
-        $display("  bitfield_pos: %0d\n", bitfield_pos);
-        $display("  bitfield_mask: 0x%016x\n", bitfield_mask);
-        $display("  bitfield: 0x%016x\n", bitfield);
-        $display("  sign_bit: %0b\n", sign_bit);
-        $display("  sign_extended_bitfield: 0x%016x\n", sign_extended_bitfield);
+        $display("BFM Instruction:");
+        $display("  imm6r: %0d", imm6r);
+        $display("  imm6s: %0d", imm6s);
+        $display("  bitfield_size: %0d", bitfield_size);
+        $display("  bitfield_pos: %0d", bitfield_pos);
+        $display("  bitfield_mask: 0x%016x", bitfield_mask);
+        $display("  bitfield: 0x%016x", bitfield);
+        $display("  sign_bit: %0b", sign_bit);
+        $display("  sign_extended_bitfield: 0x%016x", sign_extended_bitfield);
         fu.fu_out_data[0] <= BFMout;
       end else if (fu.inst[31:23] == UBFM3123) begin
         // UBFM, LSL, LSR
-        $display("BFM Instruction:\n");
-        $display("  imm6r: %0d\n", imm6r);
-        $display("  imm6s: %0d\n", imm6s);
-        $display("  bitfield_size: %0d\n", bitfield_size);
-        $display("  bitfield_pos: %0d\n", bitfield_pos);
-        $display("  bitfield_mask: 0x%016x\n", bitfield_mask);
-        $display("  bitfield: 0x%016x\n", bitfield);
-        $display("  sign_bit: %0b\n", sign_bit);
-        $display("  sign_extended_bitfield: 0x%016x\n", sign_extended_bitfield);
+        $display("BFM Instruction:");
+        $display("  imm6r: %0d", imm6r);
+        $display("  imm6s: %0d", imm6s);
+        $display("  bitfield_size: %0d", bitfield_size);
+        $display("  bitfield_pos: %0d", bitfield_pos);
+        $display("  bitfield_mask: 0x%016x", bitfield_mask);
+        $display("  bitfield: 0x%016x", bitfield);
+        $display("  sign_bit: %0b", sign_bit);
+        $display("  sign_extended_bitfield: 0x%016x", sign_extended_bitfield);
         fu.fu_out_data[0] <= BFMout;
       end
 
