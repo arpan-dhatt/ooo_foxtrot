@@ -54,12 +54,93 @@ int main(int argc, char **argv) {
     // mapping instruction inputs and expected outputs
     // third operand is always the flag register
     std::vector<testcase> testcases = {
-        {testcase_input({0x1, 0xD, 0xB}, {1, 0, 0}), // CSEL
-         testcase_output({1, 0, 0}, {0x1, 0x0, 0x0}, {true, false, false})},
-        {testcase_input({0x2, 0xF, 0xB}, {1, 0, 0}), // CSEL
-         testcase_output({1, 0, 0}, {0xF, 0x0, 0x0}, {true, false, false})},
-        {testcase_input({0x1, 0xD, 0x0}, {1, 0, 0}), // CSEL
-         testcase_output({1, 0, 0}, {0x1, 0x0, 0x0}, {true, false, false})},
+        // CSEL
+        {testcase_input({0x1, 0xD, 0xB}, {1, 0, 0}),
+         testcase_output({0x1}, {true, false, false})},
+        {testcase_input({0x2, 0xF, 0xB}, {1, 0, 0}),
+         testcase_output({0xF}, {true, false, false})},
+        {testcase_input({0x1, 0xD, 0x0}, {1, 0, 0}),
+         testcase_output({0x1}, {true, false, false})},
+
+         // CSINC
+        {testcase_input({0x1, 0xD, 0xB}, {1, 0, 0}),
+         testcase_output({0x1}, {true, false, false})},
+        {testcase_input({0x2, 0xA, 0xB}, {1, 0, 0}),
+         testcase_output({0xB}, {true, false, false})},
+        {testcase_input({0x1, 0xD, 0x0}, {1, 0, 0}),
+         testcase_output({0x1}, {true, false, false})},
+
+         // CSINV
+        {testcase_input({0x0, 0x0, 0xB}, {1, 0, 0}),
+         testcase_output({0x0}, {true, false, false})},
+        {testcase_input({0x0, 0x0, 0xB}, {1, 0, 0}),
+         testcase_output({~(uint64_t)0}, {true, false, false})},
+        {testcase_input({0x0, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x0}, {true, false, false})},
+
+         // CSNEG
+        {testcase_input({0xA, 0x2, 0xB}, {1, 0, 0}),
+         testcase_output({0xA}, {true, false, false})},
+        {testcase_input({0xC, 0x4, 0xB}, {1, 0, 0}),
+         testcase_output({~(uint64_t)0x4 + 1}, {true, false, false})},
+        {testcase_input({0xB, 0x6, 0x0}, {1, 0, 0}),
+         testcase_output({0xB}, {true, false, false})},
+
+         // MVN
+        {testcase_input({0xA, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({~(uint64_t)0xA}, {true, false, false})},
+        {testcase_input({0xC, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({~(uint64_t)0xC}, {true, false, false})},
+        {testcase_input({0xB, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({~(uint64_t)0xB}, {true, false, false})},
+
+         // ORR
+        {testcase_input({0b1010, 0b0101, 0x0}, {1, 0, 0}),
+         testcase_output({0b1111}, {true, false, false})},
+        {testcase_input({0xC, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0xC}, {true, false, false})},
+        {testcase_input({0x0, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x0}, {true, false, false})},
+
+        // EOR
+        {testcase_input({0b1010, 0b0101, 0x0}, {1, 0, 0}),
+         testcase_output({0b1111}, {true, false, false})},
+        {testcase_input({0b1111, 0xF, 0x0}, {1, 0, 0}),
+         testcase_output({0x0}, {true, false, false})},
+        {testcase_input({0x0, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x0}, {true, false, false})},
+
+        // AND
+        {testcase_input({0xAB, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0xAB}, {true, false, false})},
+        {testcase_input({0xAB, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0xA0}, {true, false, false})},
+        {testcase_input({0xAB, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x0B}, {true, false, false})},
+
+         // ANDS
+        {testcase_input({~(uint64_t)0x0, ~(uint64_t)0x0, 0x0}, {1, 0, 15}),
+         testcase_output({~(uint64_t)0, 0, 0b1000}, {true, false, true})},
+        {testcase_input({0xAB, 0x0, 0x0}, {1, 0, 15}),
+         testcase_output({0x00, 0, 0b0100}, {true, false, true})},
+        {testcase_input({0xAB, 0x0B, 0x0}, {1, 0, 15}),
+         testcase_output({0x0B, 0, 0b0000}, {true, false, true})},
+
+         // SBFM (just testing ASR)
+        {testcase_input({~(uint64_t)0x0, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({~(uint64_t)0x0}, {true, false, false})},
+        {testcase_input({0xF00, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0xF}, {true, false, false})},
+        {testcase_input({0x1, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x0}, {true, false, false})},
+
+         // UBFM (just testing LSL, LSR)
+        {testcase_input({0xF, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0xF0}, {true, false, false})},
+        {testcase_input({0xF00, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0xF0}, {true, false, false})},
+        {testcase_input({0x1, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x1llu << 63}, {true, false, false})},
     };
 
     // while loop through instructions starting at 0x8 until halt is reached
@@ -67,7 +148,7 @@ int main(int argc, char **argv) {
     uint64_t pc = 0x8;
     uint32_t inst = *(uint32_t *) (memory.data + pc);
     while (inst != 0xd4400000) {
-        std::cout << "Instr [0x" << std::hex << pc << "] " << inst << " ";
+        std::cout << std::dec << "Instr [tc: " << i << "][pc: 0x" << std::hex << pc << "] " << inst << " ";
 
         // didn't have a corresponding testcase for this instruction from ELF file
         if (i >= testcases.size()) {
@@ -94,15 +175,16 @@ int main(int argc, char **argv) {
             fu->eval();
         }
 
+#ifndef EXIT_ON_ERROR
         try {
-            testcases[i].output.check(fu);
-            std::cout << "SUCCESS" << std::endl;
-        } catch (const std::runtime_error& err) {
-#ifdef EXIT_ON_ERROR
-            throw err;
 #endif
+            testcases[i].output.check(fu, testcases[i].input);
+            std::cout << "SUCCESS" << std::endl;
+#ifndef EXIT_ON_ERROR
+        } catch (const std::runtime_error& err) {
             std::cout << "FAILURE" << std::endl;
         }
+#endif
 
         // advance to next instruction
         pc += 0x4;

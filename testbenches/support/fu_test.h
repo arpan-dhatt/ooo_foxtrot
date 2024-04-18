@@ -40,18 +40,16 @@ struct testcase_input {
  * struct to hold testcase outputs that are checked
  */
 struct testcase_output {
-  std::array<uint8_t, 3> out_prn;
   std::array<uint64_t, 3> fu_out_data;
   std::array<bool, 3> fu_out_data_valid;
 
-  testcase_output(std::array<uint8_t, 3> out_prn,
-                  std::array<uint64_t, 3> fu_out_data,
+  testcase_output(std::array<uint64_t, 3> fu_out_data,
                   std::array<bool, 3> fu_out_data_valid) :
-      out_prn(out_prn), fu_out_data(fu_out_data),
+      fu_out_data(fu_out_data),
       fu_out_data_valid(fu_out_data_valid) {}
 
   template <typename T>
-  void check(T *fu) {
+  void check(T *fu, struct testcase_input& input) {
       // ensured certain values were passed through
       if (fu->fu_out_inst_id != 42) {
           throw std::runtime_error("inst_id wasn't 42!!!!");
@@ -74,9 +72,9 @@ struct testcase_output {
                       << fu->fu_out_data[i] << ")";
                   throw std::runtime_error(msg.str());
               }
-              if (out_prn[i] != fu->fu_out_prn[i]) {
+              if (input.out_prn[i] != fu->fu_out_prn[i]) {
                   std::ostringstream msg;
-                  msg << "inputs.out_prn[" << i << "](" << out_prn[i]
+                  msg << "inputs.out_prn[" << i << "](" << input.out_prn[i]
                       << ") != fu->fu_out_prn[" << i << "]("
                       << fu->fu_out_prn[i] << ")";
                   throw std::runtime_error(msg.str());

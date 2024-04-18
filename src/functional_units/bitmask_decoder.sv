@@ -14,15 +14,15 @@ module bitmask_decoder #(
     logic [5:0] tmask_and, wmask_and;
     logic [5:0] tmask_or, wmask_or;
     logic [5:0] levels;
-    logic [5:0] len;
+    logic [7:0] len;
     logic [5:0] s, r;
     logic [6:0] diff;
 
     always_latch begin
         // Compute log2 of element size
         // 2^len must be in range [2, M]
-        len = 6'(1 << $clog2(immN ? ~imms : {6{1'b1}}));
-        if (len < 6'd1) begin
+        len = 8'(1 << $clog2({immN, ~imms}));
+        if (len < 8'd1) begin
             wmask = 'x;
             tmask = 'x;
         end else begin

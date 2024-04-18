@@ -33,7 +33,7 @@ module fu_logical (
   localparam [5:0] EOR1510 = 6'b000000;
 
   // AND
-  localparam [9:0] AND3122 = 10'b1001001000;
+  localparam [8:0] AND3123 = 9'b100100100;
 
   // ANDS, TST
   localparam [10:0] ANDS3121 = 11'b11101010000;
@@ -56,10 +56,54 @@ module fu_logical (
     .tmask(_dec_tmask)
   );
 
-  // SBFM UBFM calculation
-  always_comb
-  begin
-    
+  // ANDS intermediate value to deal with condition codes
+  logic [63:0] ANDint;
+  always_comb begin
+    assign ANDint = fu.op[0] & fu.op[1];
+  end
+
+  // SBFM/ASR calculation
+  // SBFM/UBFM/ASR/LSL/LSR calculation
+  logic [63:0] BFMout;
+  logic [5:0] imm6r, imm6s;
+  logic [6:0] bitfield_size;
+  logic [7:0] bitfield_pos;
+  logic [63:0] bitfield_mask, bitfield, sign_extended_bitfield;
+  logic sign_bit;
+  always_comb begin
+    // Extract the immediate values from the instruction
+    assign imm6r = fu.inst[16:11];
+    assign imm6s = fu.inst[10:5];
+
+    // Determine the bitfield size by subtracting imm6r from imm6s and adding 1
+    assign bitfield_size = imm6s - imm6r + 1;
+
+    // Create a mask for extracting the bitfield
+    // The mask is created by shifting 1 to the left by bitfield_size and then subtracting 1
+    assign bitfield_mask = (1 << bitfield_size) - 1;
+
+    // Extract the bitfield from the source register using the mask and shift
+    // First, shift the source register (fu.op[0]) right by imm6r to align the bitfield
+    // Then, apply the bitfield_mask using a bitwise AND operation to extract the bitfield
+    assign bitfield = (fu.op[0] >> imm6r) & bitfield_mask;
+
+    // Determine the position to place the bitfield in the destination register
+    // If imm6s is greater than or equal to imm6r, the bitfield is placed at the LSB of the destination register
+    // If imm6s is less than imm6r, the bitfield is placed at position 64 - imm6r of the destination register
+    assign bitfield_pos = (imm6s >= imm6r) ? 0 : (7'd64 - 7'(imm6r));
+
+    // Sign-extend the bitfield for SBFM
+    assign sign_bit = bitfield[bitfield_size-1];
+    assign sign_extended_bitfield = (sign_bit ? ~((1 << bitfield_size) - 1) : 0) | bitfield;
+
+    // Assign the bitfield to the BFMout variable based on the instruction type
+    if (fu.inst[31:23] == SBFM3123) begin
+      // SBFM instruction
+      assign BFMout = sign_extended_bitfield << bitfield_pos;
+    end else begin
+      // UBFM/LSL/LSR instruction
+      assign BFMout = bitfield << bitfield_pos;
+    end
   end
 
   always_ff @(posedge fu.clk)
@@ -117,33 +161,51 @@ module fu_logical (
       end else if (fu.inst[31:21] == EOR3121 && fu.inst[15:10] == EOR1510) begin
         // EOR
         fu.fu_out_data[0] <= fu.op[0] ^ fu.op[1]; // Xd <= Xn ^ Xm
-      end else if (fu.inst[31:22] == AND3122) begin
+      end else if (fu.inst[31:23] == AND3123) begin
         // AND
         // use decoded wmask
         fu.fu_out_data[0] <= fu.op[0] & dec_wmask;
       end else if (fu.inst[31:21] == ANDS3121 && fu.inst[15:10] == ANDS1510) begin
         // ANDS, TST
-        fu.fu_out_data[0] <= fu.op[0] & fu.op[1]; // Xd <= Xn & Xm
+        fu.fu_out_data[0] <= ANDint; // Xd <= Xn & Xm
+        // set condition flgas
+        fu.fu_out_data[2] <= {
+          {60{1'b0}},
+          ANDint[63], // N
+          ~(|(ANDint)), // Z
+          1'b0, // C
+          1'b0 // V
+        };
       end else if (fu.inst[31:23] == SBFM3123) begin
         // SBFM, ASR
-        if (fu.inst[15:10] >= fu.inst[21:16]) begin
-          fu.fu_out_data[0] <= ({64{fu.op[0][fu.inst[21:16]]}} << (64 - (fu.inst[15:10] - fu.inst[21:16] + 1))) | (fu.op[0] >> fu.inst[21:16]);
-        end else begin
-          fu.fu_out_data[0] <= ({64{fu.op[0][fu.inst[15:10]]}} << (64 - fu.inst[21:16])) | (fu.op[0] << (64 - fu.inst[15:10] - 1));
-        end
+        $display("BFM Instruction:\n");
+        $display("  imm6r: %0d\n", imm6r);
+        $display("  imm6s: %0d\n", imm6s);
+        $display("  bitfield_size: %0d\n", bitfield_size);
+        $display("  bitfield_pos: %0d\n", bitfield_pos);
+        $display("  bitfield_mask: 0x%016x\n", bitfield_mask);
+        $display("  bitfield: 0x%016x\n", bitfield);
+        $display("  sign_bit: %0b\n", sign_bit);
+        $display("  sign_extended_bitfield: 0x%016x\n", sign_extended_bitfield);
+        fu.fu_out_data[0] <= BFMout;
       end else if (fu.inst[31:23] == UBFM3123) begin
         // UBFM, LSL, LSR
-        if (fu.inst[15:10] >= fu.inst[21:16]) begin
-          fu.fu_out_data[0] <= (fu.op[0] >> fu.inst[21:16]) & ((1 << (fu.inst[15:10] - fu.inst[21:16] + 1)) - 1);
-        end else begin
-          fu.fu_out_data[0] <= (fu.op[0] << (64 - fu.inst[21:16])) & ((1 << (fu.inst[15:10] + 1)) - 1);
-        end
+        $display("BFM Instruction:\n");
+        $display("  imm6r: %0d\n", imm6r);
+        $display("  imm6s: %0d\n", imm6s);
+        $display("  bitfield_size: %0d\n", bitfield_size);
+        $display("  bitfield_pos: %0d\n", bitfield_pos);
+        $display("  bitfield_mask: 0x%016x\n", bitfield_mask);
+        $display("  bitfield: 0x%016x\n", bitfield);
+        $display("  sign_bit: %0b\n", sign_bit);
+        $display("  sign_extended_bitfield: 0x%016x\n", sign_extended_bitfield);
+        fu.fu_out_data[0] <= BFMout;
       end
-      
 
       // everything does the same stuff below here
-      fu.fu_out_prn[0] <= fu.out_prn[0];
-      fu.fu_out_data_valid <= {1, 0 ,0};
+      fu.fu_out_prn <= fu.out_prn;
+      // ANDS will set flags so set fu_out_data_valid[2] to 1 in that case
+      fu.fu_out_data_valid <= {1, 0, 1'(fu.inst[31:21] == ANDS3121 && fu.inst[15:10] == ANDS1510)};
       fu.fu_out_valid <= fu.inst_valid;
       fu.fu_out_inst_id <= fu.inst_id;
       fu.fu_out_valid <= 1;
