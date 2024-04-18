@@ -72,11 +72,11 @@ module fu_logical (
   logic sign_bit;
   always_comb begin
     // Extract the immediate values from the instruction
-    assign imm6r = fu.inst[16:11];
-    assign imm6s = fu.inst[10:5];
+    assign imm6r = fu.inst[21:16];
+    assign imm6s = fu.inst[15:10];
 
-    // Determine the bitfield size by subtracting imm6r from imm6s and adding 1
-    assign bitfield_size = imm6s - imm6r + 1;
+    // Determine the bitfield size depending on imm6s ?= imm6r
+    assign bitfield_size = (imm6s >= imm6r) ? imm6s - imm6r + 1 : imm6s + 1;
 
     // Create a mask for extracting the bitfield
     // The mask is created by shifting 1 to the left by bitfield_size and then subtracting 1
@@ -85,7 +85,7 @@ module fu_logical (
     // Extract the bitfield from the source register using the mask and shift
     // First, shift the source register (fu.op[0]) right by imm6r to align the bitfield
     // Then, apply the bitfield_mask using a bitwise AND operation to extract the bitfield
-    assign bitfield = (fu.op[0] >> imm6r) & bitfield_mask;
+    assign bitfield = (fu.op[0] >> ((imm6s >= imm6r) ? imm6r : 0)) & bitfield_mask;
 
     // Determine the position to place the bitfield in the destination register
     // If imm6s is greater than or equal to imm6r, the bitfield is placed at the LSB of the destination register
@@ -178,27 +178,9 @@ module fu_logical (
         };
       end else if (fu.inst[31:23] == SBFM3123) begin
         // SBFM, ASR
-        $display("BFM Instruction:");
-        $display("  imm6r: %0d", imm6r);
-        $display("  imm6s: %0d", imm6s);
-        $display("  bitfield_size: %0d", bitfield_size);
-        $display("  bitfield_pos: %0d", bitfield_pos);
-        $display("  bitfield_mask: 0x%016x", bitfield_mask);
-        $display("  bitfield: 0x%016x", bitfield);
-        $display("  sign_bit: %0b", sign_bit);
-        $display("  sign_extended_bitfield: 0x%016x", sign_extended_bitfield);
         fu.fu_out_data[0] <= BFMout;
       end else if (fu.inst[31:23] == UBFM3123) begin
         // UBFM, LSL, LSR
-        $display("BFM Instruction:");
-        $display("  imm6r: %0d", imm6r);
-        $display("  imm6s: %0d", imm6s);
-        $display("  bitfield_size: %0d", bitfield_size);
-        $display("  bitfield_pos: %0d", bitfield_pos);
-        $display("  bitfield_mask: 0x%016x", bitfield_mask);
-        $display("  bitfield: 0x%016x", bitfield);
-        $display("  sign_bit: %0b", sign_bit);
-        $display("  sign_extended_bitfield: 0x%016x", sign_extended_bitfield);
         fu.fu_out_data[0] <= BFMout;
       end
 

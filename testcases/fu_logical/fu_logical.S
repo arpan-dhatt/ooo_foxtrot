@@ -54,6 +54,6 @@ _start:
     // UBFM/LSL/LSR
     lsl x14, x24, #4
     lsr x25, x11, #4
-    lsl x21, x21, #63
+    lsl x21, x21, #31
 
     hlt #0

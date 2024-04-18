@@ -10,7 +10,7 @@
 #include "support/memory.h"
 #include "support/fu_test.h"
 
-// #define EXIT_ON_ERROR
+#define EXIT_ON_ERROR
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -129,8 +129,8 @@ int main(int argc, char **argv) {
          // SBFM (just testing ASR)
         {testcase_input({~(uint64_t)0x0, 0x0, 0x0}, {1, 0, 0}),
          testcase_output({~(uint64_t)0x0}, {true, false, false})},
-        {testcase_input({0xF00, 0x0, 0x0}, {1, 0, 0}),
-         testcase_output({0xF}, {true, false, false})},
+        {testcase_input({0x87654321, 0x0, 0x0}, {1, 0, 0}),
+         testcase_output({0x876543}, {true, false, false})},
         {testcase_input({0x1, 0x0, 0x0}, {1, 0, 0}),
          testcase_output({0x0}, {true, false, false})},
 
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
         {testcase_input({0xF00, 0x0, 0x0}, {1, 0, 0}),
          testcase_output({0xF0}, {true, false, false})},
         {testcase_input({0x1, 0x0, 0x0}, {1, 0, 0}),
-         testcase_output({0x1llu << 63}, {true, false, false})},
+         testcase_output({0x1llu << 31}, {true, false, false})},
     };
 
     // while loop through instructions starting at 0x8 until halt is reached
