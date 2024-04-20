@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     // Use dummy memory array to load our ELF into (has instructions we're using)
     // Create memory instance
     constexpr size_t MEMORY_SIZE = 4 * 1024;  // 4 KiB
-    constexpr size_t MEMORY_LATENCY = 10;  // 10 cycles latency
+    constexpr size_t MEMORY_LATENCY = 0;  // 10 cycles latency
     Memory memory(MEMORY_SIZE, MEMORY_LATENCY);
 
     if (std::ifstream(elf_file_path).good()) {
@@ -40,6 +40,8 @@ int main(int argc, char **argv) {
     } else {
         throw std::invalid_argument("ELF file doesn't exist");
     }
+
+    //std::cout << "loaded elf" << std::endl;
 
     // Reset module
     fu->clk = 0;
@@ -51,14 +53,74 @@ int main(int argc, char **argv) {
     fu->clk = 0;
     fu->eval();
 
-    std::vector<testcase> tc = {
-        {testcase_input({0x1000, 0x1, 0x1}, {1, 0, 0}),
-         testcase_output({0x5}, {true, false, false})},
-    }
+    //std::cout << "reset done" << std::endl;
+
+    std::vector<testcase> testcases = {
+        // stp/ldp no offset test
+        {testcase_input({0x100, 0x4, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x4, 0x5}, {true, true, false})},
+
+        // stp/ldp (+) offset test
+        {testcase_input({0x100, 0x2, 0x3}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x2, 0x3}, {true, true, false})},
+
+        // stp/ldp (-) offset test
+        {testcase_input({0x100, 0x6, 0x7}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x6, 0x7}, {true, true, false})},
+
+        // stur/ldur no offset test
+        {testcase_input({0x100, 0x6, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x6}, {true, false, false})},
+        {testcase_input({0x100, 0x7, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x7}, {true, false, false})},
+        {testcase_input({0x100, 0x8, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x8}, {true, false, false})},
+
+        // stur/ldur + offset test
+        {testcase_input({0x100, 0x6, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x6}, {true, false, false})},
+        {testcase_input({0x100, 0x7, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x7}, {true, false, false})},
+        {testcase_input({0x100, 0x8, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x8}, {true, false, false})},
+
+        // stur/ldur - offset test
+        {testcase_input({0x100, 0x6, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x6}, {true, false, false})},
+        {testcase_input({0x100, 0x7, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x7}, {true, false, false})},
+        {testcase_input({0x100, 0x8, 0x5}, {1, 0, 0}),
+         testcase_output({0x5}, {false, false, false})},
+        {testcase_input({0x100, 0x10, 0x1}, {1, 0, 0}),
+         testcase_output({0x8}, {true, false, false})},
+    };
 
     int i = 0;
     uint64_t pc = 0x8;
     uint32_t inst = *(uint32_t *) (memory.data + pc);
+    //std::cout << "init done" << std::endl;
     while (inst != 0xd4400000) {
         std::cout << std::dec << "Instr [tc: " << i << "][pc: 0x" << std::hex << pc << "] " << inst << " ";
 
@@ -79,6 +141,32 @@ int main(int argc, char **argv) {
 
         // cycle clock until fu_out_valid
         while (!fu->fu_out_valid) {
+            if (fu->mem_ren && fu->mem_raddr < MEMORY_SIZE) {
+                memory.read(fu->mem_raddr);
+            }
+
+            memory.update();
+
+            if (fu->mem_wen) {
+                if (fu->mem_waddr < MEMORY_SIZE) {
+                    //std::cout << "writing: " << fu->mem_wdata << " to addr: " << fu->mem_waddr << std::endl;
+                    memory.write(fu->mem_waddr, fu->mem_wdata);
+                } else {
+                    std::ostringstream msg;
+                    msg << "CPU tried to write to invalid addr " << fu->mem_waddr;
+                    throw std::out_of_range(msg.str());
+                }
+            }
+
+            auto read_data = memory.get_read_data();
+            if (read_data.has_value()) {
+                fu->mem_rvalid = 1;
+                fu->mem_rdata = read_data.value();
+                //std::cout << read_data.value() << std::endl;
+            } else {
+                //std::cout << "hello" << std::endl;
+                fu->mem_rvalid = 0;
+            }   
             // set inst_valid to false to not keep inserting same instruction
             fu->inst_valid = false;
             fu->clk ^= 1;

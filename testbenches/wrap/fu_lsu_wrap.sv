@@ -58,7 +58,7 @@ module fu_lsu_wrap #(
 
   // Instantiate the fu_logical module
   fu_lsu fu_lsu_inst (
-      .fu(fu_if_inst.fu),
+      .iface(fu_if_inst.fu),
       .mem_ren(mem_ren),
       .mem_raddr(mem_raddr),
       .mem_rvalid(mem_rvalid),

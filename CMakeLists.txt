@@ -27,3 +27,10 @@ add_executable(Vfu_logical
 target_link_libraries(Vfu_logical PRIVATE elfio)
 target_include_directories(Vfu_logical PRIVATE ext/ELFIO)
 verilate(Vfu_logical PREFIX Vfu_logical SOURCES ${SV_SOURCES} ${SV_WRAPPERS} TOP_MODULE fu_logical_wrap INCLUDE_DIRS .)
+
+add_executable(Vfu_lsu
+        testbenches/fu_lsu.cpp
+        testbenches/support/memory.cpp)
+target_link_libraries(Vfu_lsu PRIVATE elfio)
+target_include_directories(Vfu_lsu PRIVATE ext/ELFIO)
+verilate(Vfu_lsu PREFIX Vfu_lsu SOURCES ${SV_SOURCES} ${SV_WRAPPERS} TOP_MODULE fu_lsu_wrap INCLUDE_DIRS .)
