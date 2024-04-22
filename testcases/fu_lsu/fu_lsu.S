@@ -35,4 +35,6 @@ _start:
     stur x13, [x5, #-24]
     ldur x13, [x5, #-24] 
     stur x13, [x5, #-40]
-    ldur x13, [x5, #-40]  
+    ldur x13, [x5, #-40]
+
+    hlt #0
