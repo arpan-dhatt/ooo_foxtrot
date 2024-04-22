@@ -41,9 +41,7 @@ module fu_arith (
     end else if (fu.inst[31:21] == SUBS_31_21 && fu.inst[15:10] == SUBS_15_10) begin // SUBS, CMP
       b = ~fu.op[1] + 1; // Xn - Xm = Xn + (~XM + 1)
       setcond = 1'b1;
-      if(fu.inst[4:0] == CMP_04_00) begin
-        setrd = 1'b0;
-      end
+      setrd = 1'(fu.inst[4:0] != CMP_04_00);
     end
     {c, s} = a + b;
     n = s[63];
