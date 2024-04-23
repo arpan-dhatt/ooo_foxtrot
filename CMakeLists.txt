@@ -41,3 +41,7 @@ add_executable(Vinst_decoder
 target_link_libraries(Vinst_decoder PRIVATE elfio)
 target_include_directories(Vinst_decoder PRIVATE ext/ELFIO)
 verilate(Vinst_decoder PREFIX Vinst_decoder SOURCES ${SV_SOURCES} TOP_MODULE inst_decoder INCLUDE_DIRS .)
+
+add_executable(Vrename
+        testbenches/rename.cpp)
+verilate(Vrename PREFIX Vrename SOURCES ${SV_SOURCES} TOP_MODULE rename INCLUDE_DIRS .)
