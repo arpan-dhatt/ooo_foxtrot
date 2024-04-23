@@ -34,3 +34,10 @@ add_executable(Vfu_lsu
 target_link_libraries(Vfu_lsu PRIVATE elfio)
 target_include_directories(Vfu_lsu PRIVATE ext/ELFIO)
 verilate(Vfu_lsu PREFIX Vfu_lsu SOURCES ${SV_SOURCES} ${SV_WRAPPERS} TOP_MODULE fu_lsu_wrap INCLUDE_DIRS .)
+
+add_executable(Vinst_decoder
+        testbenches/inst_decoder.cpp
+        testbenches/support/memory.cpp)
+target_link_libraries(Vinst_decoder PRIVATE elfio)
+target_include_directories(Vinst_decoder PRIVATE ext/ELFIO)
+verilate(Vinst_decoder PREFIX Vinst_decoder SOURCES ${SV_SOURCES} TOP_MODULE inst_decoder INCLUDE_DIRS .)
