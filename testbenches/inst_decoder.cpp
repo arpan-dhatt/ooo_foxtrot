@@ -84,99 +84,99 @@ int main(int argc, char **argv) {
     // third operand is always the flag register
     std::vector<testcase> testcases = {
         // MOVK
-        testcase(FU_DPI, {0, 0, 0}, {5, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {12, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {20, 0, 0}),
+        testcase(FU_DPI, {62, 62, 62}, {5, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {12, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {20, 62, 62}),
 
         // MOVZ
-        testcase(FU_DPI, {0, 0, 0}, {3, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {8, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {15, 0, 0}),
+        testcase(FU_DPI, {62, 62, 62}, {3, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {8, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {15, 62, 62}),
 
         // ADR
-        testcase(FU_DPI, {0, 0, 0}, {10, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {7, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {18, 0, 0}),
+        testcase(FU_DPI, {62, 62, 62}, {10, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {7, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {18, 62, 62}),
 
         // ADRP
-        testcase(FU_DPI, {0, 0, 0}, {2, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {9, 0, 0}),
-        testcase(FU_DPI, {0, 0, 0}, {14, 0, 0}),
+        testcase(FU_DPI, {62, 62, 62}, {2, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {9, 62, 62}),
+        testcase(FU_DPI, {62, 62, 62}, {14, 62, 62}),
 
         // ADD/ADDS
-        testcase(FU_ARITH, {5, 0, 0}, {12, 0, 0}),
-        testcase(FU_ARITH, {5, 0, 0}, {12, 0, 0}),
-        testcase(FU_ARITH, {20, 21, 0}, {3, 0, 32}),
+        testcase(FU_ARITH, {5, 62, 62}, {12, 62, 62}),
+        testcase(FU_ARITH, {5, 62, 62}, {12, 62, 62}),
+        testcase(FU_ARITH, {20, 21, 62}, {3, 62, 32}),
 
         // SUB/SUBS
-        testcase(FU_ARITH, {3, 0, 0}, {1, 0, 0}),
-        testcase(FU_ARITH, {3, 0, 0}, {1, 0, 0}),
-        testcase(FU_ARITH, {20, 21, 0}, {3, 0, 32}),
+        testcase(FU_ARITH, {3, 62, 62}, {1, 62, 62}),
+        testcase(FU_ARITH, {3, 62, 62}, {1, 62, 62}),
+        testcase(FU_ARITH, {20, 21, 62}, {3, 62, 32}),
 
         // CMP
-        testcase(FU_ARITH, {5, 3, 0}, {63, 0, 32}),
+        testcase(FU_ARITH, {5, 3, 62}, {63, 62, 32}),
 
         // STP-LDP
-        testcase(FU_LSU, {11, 0, 0}, {10, 9, 0}),
-        testcase(FU_LSU, {12, 0, 0}, {10, 9, 0}),
+        testcase(FU_LSU, {11, 62, 62}, {10, 9, 62}),
+        testcase(FU_LSU, {12, 62, 62}, {10, 9, 62}),
 
         // LDUR-STUR
-        testcase(1, {5, 0, 0}, {13, 0, 0}),
-        testcase(1, {5, 0, 0}, {13, 0, 0}),
+        testcase(1, {5, 62, 62}, {13, 62, 62}),
+        testcase(1, {5, 62, 62}, {13, 62, 62}),
 
         // CSEL
-        testcase(0, {11, 63, 32}, {14, 0, 0}),
-        testcase(0, {11, 12, 32}, {14, 0, 0}),
-        testcase(0, {2, 3, 32}, {1, 0, 0}),
+        testcase(0, {11, 63, 32}, {14, 62, 62}),
+        testcase(0, {11, 12, 32}, {14, 62, 62}),
+        testcase(0, {2, 3, 32}, {1, 62, 62}),
 
         // CSINC/CINC
-        testcase(0, {5, 5, 32}, {4, 0, 0}),
-        testcase(0, {8, 9, 32}, {7, 0, 0}),
-        testcase(0, {11, 12, 32}, {10, 0, 0}),
+        testcase(0, {5, 5, 32}, {4, 62, 62}),
+        testcase(0, {8, 9, 32}, {7, 62, 62}),
+        testcase(0, {11, 12, 32}, {10, 62, 62}),
 
         // CSINV
-        testcase(0, {26, 27, 32}, {25, 0, 0}),
-        testcase(0, {29, 30, 32}, {28, 0, 0}),
+        testcase(0, {26, 27, 32}, {25, 62, 62}),
+        testcase(0, {29, 30, 32}, {28, 62, 62}),
 
         // CSNEG
-        testcase(0, {10, 63, 32}, {9, 0, 0}),
-        testcase(0, {13, 14, 32}, {12, 0, 0}),
-        testcase(0, {16, 17, 32}, {15, 0, 0}),
+        testcase(0, {10, 63, 32}, {9, 62, 62}),
+        testcase(0, {13, 14, 32}, {12, 62, 62}),
+        testcase(0, {16, 17, 32}, {15, 62, 62}),
 
         // MVN
-        testcase(0, {63, 25, 0}, {24, 0, 0}),
-        testcase(0, {63, 27, 0}, {26, 0, 0}),
-        testcase(0, {63, 29, 0}, {28, 0, 0}),
+        testcase(0, {63, 25, 62}, {24, 62, 62}),
+        testcase(0, {63, 27, 62}, {26, 62, 62}),
+        testcase(0, {63, 29, 62}, {28, 62, 62}),
 
         // ORR
-        testcase(0, {1, 63, 0}, {0, 0, 0}),
-        testcase(0, {4, 5, 0}, {3, 0, 0}),
-        testcase(0, {7, 8, 0}, {6, 0, 0}),
+        testcase(0, {1, 63, 62}, {0, 62, 62}),
+        testcase(0, {4, 5, 62}, {3, 62, 62}),
+        testcase(0, {7, 8, 62}, {6, 62, 62}),
 
         // EOR
-        testcase(0, {10, 11, 0}, {9, 0, 0}),
-        testcase(0, {13, 14, 0}, {12, 0, 0}),
-        testcase(0, {16, 17, 0}, {15, 0, 0}),
+        testcase(0, {10, 11, 62}, {9, 62, 62}),
+        testcase(0, {13, 14, 62}, {12, 62, 62}),
+        testcase(0, {16, 17, 62}, {15, 62, 62}),
 
         // AND
-        testcase(0, {19, 0, 0}, {18, 0, 0}),
-        testcase(0, {21, 0, 0}, {20, 0, 0}),
-        testcase(0, {23, 0, 0}, {22, 0, 0}),
+        testcase(0, {19, 62, 62}, {18, 62, 62}),
+        testcase(0, {21, 62, 62}, {20, 62, 62}),
+        testcase(0, {23, 62, 62}, {22, 62, 62}),
 
         // ANDS (with TST alias)
-        testcase(0, {23, 12, 0}, {63, 0, 32}),
-        testcase(0, {28, 29, 0}, {27, 0, 32}),
-        testcase(0, {1, 2, 0}, {0, 0, 32}),
+        testcase(0, {23, 12, 62}, {63, 62, 32}),
+        testcase(0, {28, 29, 62}, {27, 62, 32}),
+        testcase(0, {1, 2, 62}, {0, 62, 32}),
 
         // SBFM/ASR
-        testcase(0, {12, 0, 0}, {12, 0, 0}),
-        testcase(0, {14, 0, 0}, {12, 0, 0}),
-        testcase(0, {11, 0, 0}, {12, 0, 0}),
+        testcase(0, {12, 62, 62}, {12, 62, 62}),
+        testcase(0, {14, 62, 62}, {12, 62, 62}),
+        testcase(0, {11, 62, 62}, {12, 62, 62}),
 
         // UBFM/LSL/LSR
-        testcase(0, {24, 0, 0}, {14, 0, 0}),
-        testcase(0, {11, 0, 0}, {25, 0, 0}),
-        testcase(0, {21, 0, 0}, {21, 0, 0})
+        testcase(0, {24, 62, 62}, {14, 62, 62}),
+        testcase(0, {11, 62, 62}, {25, 62, 62}),
+        testcase(0, {21, 62, 62}, {21, 62, 62})
     };
 
     // while loop through instructions starting at 0x8 until halt is reached

@@ -4,6 +4,7 @@ Instruction decoder which chooses FU's and how many and which registers are need
 Logical Register number explanation:
 0-31: actual logical registers (x31 always equals sp)
 32: flag register (always set to last lrn_input or lrn_output)
+62: unused
 63: zero register (used for instructions which use x31 as XZR)
 
 FU Choice:
@@ -118,63 +119,63 @@ module inst_decoder #(
     if (instr_format == M_fmt) begin
         lrn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
-            0,
-            input_flag ? 32 : 0
+            62,
+            input_flag ? 32 : 62
         };
         lrn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
-            0,
-            output_flag ? 32 : 0
+            62,
+            output_flag ? 32 : 62
         };
     end else if (instr_format == M_fmt) begin
         lrn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
-            0,
-            input_flag ? 32 : 0
+            62,
+            input_flag ? 32 : 62
         };
     end else if (instr_format == M2_fmt) begin
         lrn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
-            0,
-            input_flag ? 32 : 0
+            62,
+            input_flag ? 32 : 62
         };
         lrn_outputs = {
             {1'b0, raw_instr[4:0]},
             {1'b0, raw_instr[14:10]},
-            output_flag ? 32 : 0
+            output_flag ? 32 : 62
         };
     end else if (instr_format == I1_fmt || instr_format == I2_fmt) begin
-        lrn_inputs = {0, 0, input_flag ? 32 : 0};
+        lrn_inputs = {62, 62, input_flag ? 32 : 62};
         lrn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
-            0,
-            output_flag ? 32 : 0
+            62,
+            output_flag ? 32 : 62
         };
     end else if (instr_format == RC_fmt || instr_format == RR_fmt) begin
         lrn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
             {zero_reg && raw_instr[20:16] == 31 ? 1'b1 : 1'b0, raw_instr[20:16]},
-            input_flag ? 32 : 0
+            input_flag ? 32 : 62
         };
         lrn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
-            0,
-            output_flag ? 32 : 0
+            62,
+            output_flag ? 32 : 62
         };
     end else if (instr_format == RI_fmt) begin
         lrn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
-            0,
-            input_flag ? 32 : 0
+            62,
+            input_flag ? 32 : 62
         };
         lrn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
-            0,
-            output_flag ? 32 : 0
+            62,
+            output_flag ? 32 : 62
         };
     end else begin
-        lrn_inputs = {0, 0, 0};
-        lrn_outputs = {0, 0, 0};
+        lrn_inputs = {62, 62, 62};
+        lrn_outputs = {62, 62, 62};
         $display("unimplemented instruction format");
     end
   end
@@ -363,8 +364,8 @@ module inst_decoder #(
         zero_reg = 0;
         input_flag = 0;
         output_flag = 0;
-        lrn_inputs = {0, 0, 0};
-        lrn_outputs = {0, 0, 0};
+        lrn_inputs = {62, 62, 62};
+        lrn_outputs = {62, 62, 62};
       end
   end
 endmodule
