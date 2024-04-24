@@ -45,3 +45,7 @@ verilate(Vinst_decoder PREFIX Vinst_decoder SOURCES ${SV_SOURCES} TOP_MODULE ins
 add_executable(Vrename
         testbenches/rename.cpp)
 verilate(Vrename PREFIX Vrename SOURCES ${SV_SOURCES} TOP_MODULE rename INCLUDE_DIRS .)
+
+add_executable(Vfifo
+        testbenches/fifo.cpp)
+verilate(Vfifo PREFIX Vfifo SOURCES ${SV_SOURCES} TOP_MODULE fifo INCLUDE_DIRS .)

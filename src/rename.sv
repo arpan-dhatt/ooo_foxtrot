@@ -43,6 +43,8 @@ logic [PRN_BITS:0] phys_remaining;
 logic [PRN_BITS:0] phys_available;
 always_comb
 begin
+
+    prn_input = lrn_output;
     num_requested_regs = (
         (lrn_output[0] != INVALID_LRN && lrn_output[0] != ZERO_LRN ? 1 : 0)
         + (lrn_output[1] != INVALID_LRN && lrn_output[1] != ZERO_LRN ? 1 : 0)
