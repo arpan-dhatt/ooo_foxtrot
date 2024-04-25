@@ -64,7 +64,6 @@ begin
         end else begin
             fifo_len = MAX_LENGTH - (fifo_head - fifo_tail);
         end
-        $display("num_get_values: %0d, num_put_values: %0d, fifo_len: %0d", num_get_values, num_put_values, fifo_len);
     end
 
 end
@@ -94,12 +93,11 @@ always_comb begin
         // move FIFO head downward (will wrap)
         for (int i = 0; i < MAX_IO; i++) begin
             if (get_en[i]) begin
-                gotten[i] = fifo_mem[ML_BITS'(get_offset[i])];
+                gotten[i] = fifo_mem[ML_BITS'(fifo_head + (ML_BITS)'(get_offset[i]))];
             end
         end
         if (num_get_values > 0) begin
             gotten_valid = 1;
-            $display("Getting %0d values, new fifo_head: %0d", num_get_values, fifo_head + ML_BITS'(num_get_values));
         end
     end
 end
@@ -116,6 +114,15 @@ begin
         fifo_tail <= 0;
         len <= MAX_LENGTH;
     end else begin
+        // $display("num_get_values: %0d, num_put_values: %0d, fifo_len: %0d", num_get_values, num_put_values, fifo_len);
+        // $display("Getting [%0d, %0d, %0d] {%0d, %0d, %0d} %0d values, new fifo_head: %0d", 
+        // 6'(get_offset[0]) + fifo_head, 6'(get_offset[1]) + fifo_head, 6'(get_offset[2]) + fifo_head, 
+        // gotten[0], gotten[1], gotten[2],
+        // num_get_values, fifo_head + ML_BITS'(num_get_values));
+        // $display("Putting [%0d, %0d, %0d] %0d values, new fifo_tail: %0d", 
+        // 6'(put_offset[0]) + fifo_tail, 6'(put_offset[1]) + fifo_tail, 6'(put_offset[2]) + fifo_tail, 
+        // num_put_values, fifo_tail + ML_BITS'(num_put_values));
+
         if ((ML_BITS+1)'(num_get_values) <= fifo_len) begin
             // move FIFO head downward (will wrap)
             fifo_head <= fifo_head + ML_BITS'(num_get_values);
@@ -123,7 +130,7 @@ begin
             $display("Cannot get values, fifo_len: %0d, num_get_values: %0d", fifo_len, num_get_values);
         end
 
-        if ((ML_BITS+1)'(num_put_values) + fifo_len < MAX_LENGTH) begin
+        if ((ML_BITS+1)'(num_put_values) + fifo_len <= MAX_LENGTH) begin
             // put values into FIFO
             for (int i = 0; i < MAX_IO; i++) begin
                 if (put_en[i]) begin
@@ -133,13 +140,13 @@ begin
 
             // move FIFO tail downward (will wrap)
             fifo_tail <= fifo_tail + ML_BITS'(num_put_values);
-            if (num_put_values > 0) begin
-                $display("Putting %0d values, new fifo_tail: %0d", num_put_values, fifo_tail + ML_BITS'(num_put_values));
-            end
+            // if (num_put_values > 0) begin
+                // $display("Putting %0d values, new fifo_tail: %0d", num_put_values, fifo_tail + ML_BITS'(num_put_values));
+            // end
         end
 
         len <= fifo_len + ML_BITS'(num_put_values) - ML_BITS'(num_get_values);
-        $display("New FIFO length: %0d", fifo_len + ML_BITS'(num_put_values) - ML_BITS'(num_get_values));
+        // $display("New FIFO length: %0d\n", fifo_len + ML_BITS'(num_put_values) - ML_BITS'(num_get_values));
     end
 end
 endmodule

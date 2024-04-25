@@ -53,11 +53,14 @@ struct FIFOCompare {
               top->put[i] = put_vals[i].value();
           }
       }
+      // get values at combinational before edge finishing rising
       top->eval();
 
       std::array<std::optional<uint8_t>, 3> gotten{};
       for (int i = 0; i < 3; ++i) {
-          gotten[i] = top->gotten[i];
+          if (get[i]) {
+              gotten[i] = top->gotten[i];
+          }
       }
       bool gotten_valid = top->gotten_valid;
 
@@ -75,6 +78,12 @@ struct FIFOCompare {
           }
       }
 
+      // finish cycling clock to change fifo state
+      top->clk = 1;
+      top->eval();
+      top->clk = 0;
+      top->eval();
+
       return {gotten, gotten_valid};
   }
 };
@@ -88,10 +97,18 @@ int main(int argc, char *argv[]) {
         {false, false, false},
         {std::nullopt, std::nullopt, std::nullopt});
 
-    // Test case 2: Get some values out
+    // Test case 1: Get some values out
     std::tie(gotten, valid) = fifo.run({true, false, true}, {});
     assert(valid);
-    assert((gotten == std::array<std::optional<uint8_t>, 3>{0, std::nullopt, 1}));
+    assert((gotten
+        == std::array<std::optional<uint8_t>, 3>{0, std::nullopt, 1}));
+
+    // Test case 2: Get two out and put two back
+    std::tie(gotten, valid) =
+        fifo.run({true, false, true}, {0, std::nullopt, 1});
+    assert(valid);
+    assert((gotten
+        == std::array<std::optional<uint8_t>, 3>{2, std::nullopt, 3}));
 
     std::cout << "All test cases passed!" << std::endl;
 
