@@ -96,9 +96,7 @@ always_comb begin
                 gotten[i] = fifo_mem[ML_BITS'(fifo_head + (ML_BITS)'(get_offset[i]))];
             end
         end
-        if (num_get_values > 0) begin
-            gotten_valid = 1;
-        end
+        gotten_valid = 1;
     end
 end
 
