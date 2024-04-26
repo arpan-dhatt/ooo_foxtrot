@@ -14,7 +14,7 @@ module rob #(
     // Note that these mappings are what was ovewritten by this instruction, not what it actually maps to
     input logic mapping_inputs_valid[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] mapping_inputs_prn[MAX_OPERANDS],
-    input logic [32:0] mapping_inputs_arn[MAX_OPERANDS],
+    input logic [5:0] mapping_inputs_arn[MAX_OPERANDS],
     output logic [INST_ID_BITS-1:0]new_inst_id,
 
     // Freed prns for the renamer
@@ -35,7 +35,7 @@ typedef struct {
     logic [63:0] pc;
     logic mapping_valid[MAX_OPERANDS];
     logic [PRN_BITS-1:0] mapping_prn[MAX_OPERANDS];
-    logic [32:0] mapping_arn[MAX_OPERANDS];
+    logic [5:0] mapping_arn[MAX_OPERANDS];
 } ROBEntry;
 
 // circular buffer
