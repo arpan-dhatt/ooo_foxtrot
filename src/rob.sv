@@ -23,7 +23,11 @@ module rob #(
 
     // From FUs
     input logic fu_out_inst_valid[FU_COUNT],
-    input logic [INST_ID_BITS-1:0] fu_out_inst_ids[FU_COUNT]
+    input logic [INST_ID_BITS-1:0] fu_out_inst_ids[FU_COUNT],
+
+    // To LSU, for when to retire stores
+    output logic [INST_ID_BITS-1:0] retire_inst_id,
+    output logic retire_inst_valid
 );
 
 localparam ROB_STATE_ISSUED = 0;
@@ -67,12 +71,15 @@ begin
             inst_ready <= head + 1 != tail;
         end
         if (tail != head && buffer[tail].state == ROB_STATE_COMMITED) begin
-            // commit
+            // Retire
             for (int i = 0; i < MAX_OPERANDS; i++) begin
                 freed_prns_valid[i] <= buffer[tail].mapping_valid[i];
                 freed_prns[i] <= buffer[tail].mapping_prn[i];
             end
-            $display("Committing instruction at %0d", buffer[tail].pc);
+            $display("Retiring instruction at %0d", buffer[tail].pc);
+
+            retire_inst_id <= tail;
+            retire_inst_valid <= 1;
 
             tail <= tail + 1;
             inst_ready <= 1;
