@@ -28,7 +28,6 @@ module fifo #(
     input logic [IO_WIDTH-1:0] put [MAX_IO],        // values visible in next cycle
 
     output logic [IO_WIDTH-1:0] gotten [MAX_IO],    // values from FIFO
-    output logic gotten_valid,                       // whether any outputs are valid
 
     output logic [ML_BITS:0] len                  // current length of FIFO
 );
@@ -46,6 +45,9 @@ logic [MI_BITS-1:0] num_get_values;
 logic [MI_BITS-1:0] num_put_values;
 // number of values remaining in FIFO
 logic [ML_BITS:0] fifo_len;
+// FIFO index offset calculation using prefix sum
+logic [MI_BITS-1:0] get_offset[MAX_IO];
+logic [MI_BITS-1:0] put_offset[MAX_IO];
 always_comb
 begin
     num_get_values = 0;
@@ -66,13 +68,6 @@ begin
         end
     end
 
-end
-
-// FIFO index offset calculation using prefix sum
-logic [MI_BITS-1:0] get_offset[MAX_IO];
-logic [MI_BITS-1:0] put_offset[MAX_IO];
-always_comb
-begin
     for (int i = 0; i < MAX_IO; i++) begin
         get_offset[i] = 0;
         put_offset[i] = 0;
@@ -81,10 +76,7 @@ begin
             put_offset[i] = put_offset[i] + put_en[j];
         end
     end
-end
 
-always_comb begin
-    gotten_valid = 0;
     for (int i = 0; i < MAX_IO; i++) begin
         gotten[i] = 0;
     end
@@ -96,9 +88,9 @@ always_comb begin
                 gotten[i] = fifo_mem[ML_BITS'(fifo_head + (ML_BITS)'(get_offset[i]))];
             end
         end
-        gotten_valid = 1;
     end
 end
+
 
 always_ff @(posedge clk)
 begin

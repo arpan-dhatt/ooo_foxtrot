@@ -62,7 +62,6 @@ struct FIFOCompare {
               gotten[i] = top->gotten[i];
           }
       }
-      bool gotten_valid = top->gotten_valid;
 
       int num_get_values = std::count(get.begin(), get.end(), true);
       int num_put_values = std::count_if(put_vals.begin(),
@@ -84,7 +83,7 @@ struct FIFOCompare {
       top->clk = 0;
       top->eval();
 
-      return {gotten, gotten_valid};
+      return {gotten, true};
   }
 };
 

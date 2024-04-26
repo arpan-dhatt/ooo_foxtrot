@@ -34,17 +34,17 @@ struct RenamerWrap {
       renamer->eval();
   }
 
-  void set_lrns(const std::array<int, 3>& inputs,
+  void set_arns(const std::array<int, 3>& inputs,
                 const std::array<int, 3>& outputs) const {
       for (size_t i = 0; i < inputs.size(); i++) {
-          renamer->lrn_input[i] = inputs[i];
-          renamer->lrn_output[i] = outputs[i];
+          renamer->arn_input[i] = inputs[i];
+          renamer->arn_output[i] = outputs[i];
       }
-      renamer->lrns_valid = true;
+      renamer->input_valid = true;
   }
 
-  void invalid_lrns() const {
-      renamer->lrns_valid = false;
+  void invalid_arns() const {
+      renamer->input_valid = false;
   }
 
   void set_free_prns(const std::array<std::optional<int>, 6>& free_prns) const {
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     // Reset renamer
     renamer.reset();
-    renamer.set_lrns({2, INVALID_LRN, INVALID_LRN},
+    renamer.set_arns({2, INVALID_LRN, INVALID_LRN},
                      {2, 4, INVALID_LRN});
     renamer.cycle();
 

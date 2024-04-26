@@ -15,8 +15,13 @@ module rename #(
     input logic free_valid[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] free_prns[MAX_OPERANDS],
 
+    // Ready bits being received for PRN's
+    input logic set_prn_ready_valid[MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] set_prn_ready[MAX_OPERANDS],
+
     // PRN inputs
     output logic prn_input_valid[MAX_OPERANDS],
+    output logic prn_input_ready[MAX_OPERANDS],
     output logic [PRN_BITS-1:0] prn_input[MAX_OPERANDS],
 
     // PRN outputs
@@ -36,8 +41,6 @@ localparam MO_BITS = $clog2(MAX_OPERANDS);
 
 logic get_prns[MAX_OPERANDS];
 
-logic new_prns_valid;
-
 logic [PRN_BITS:0] rem_free_prns;
 fifo #(1<<PRN_BITS, PRN_BITS, MAX_OPERANDS) prn_queue (
     .clk(clk),
@@ -47,13 +50,13 @@ fifo #(1<<PRN_BITS, PRN_BITS, MAX_OPERANDS) prn_queue (
     .put(free_prns),
 
     .gotten(prn_output),
-    .gotten_valid(new_prns_valid),
 
     .len(rem_free_prns)
 );
 
 typedef struct {
     logic valid;
+    logic ready;
     logic [PRN_BITS-1:0] prn;
 } RemapEntry;
 
@@ -64,15 +67,21 @@ logic arn_valid[MAX_OPERANDS];
 always_comb begin
     // perform the input remapping
     for (int i = 0; i < MAX_OPERANDS; i++) begin
+        prn_input_ready[i] = 0;
+        prn_input_valid[i] = 0;
         if (arn_input[i] == ARN_BITS'(62)) begin // invalid
-            prn_input_valid[i] = 0;
             prn_input[i] = (1<<PRN_BITS) - 1;
         end else if (arn_input[i] == ARN_BITS'(63)) begin // zero
-            prn_input_valid[i] = 0;
             prn_input[i] = 0;
         end else begin // valid ARN (0-32) needs remapping
             prn_input_valid[i] = 1;
             prn_input[i] = remap_file[arn_input[i]].prn;
+            // forward ready signals that finished in same cycle
+            for (int j = 0; j < MAX_OPERANDS; j++) begin
+                if (set_prn_ready_valid[j] && prn_input[i] == set_prn_ready[j]) begin
+                    prn_input_ready[i] = 1;
+                end
+            end
             if (!remap_file[arn_input[i]].valid) begin
                 $display("ERROR: Assigning ARN %0d an empty remap entry!", arn_input[i]);
             end
@@ -110,9 +119,6 @@ always_comb begin
         mapping_inputs_arn[i] = arn_input[i];
         mapping_inputs_prn[i] = remap_file[arn_input[i]].prn;
     end
-
-    // do this since we can
-    mapping_valid = new_prns_valid & mapping_valid;
 end
 
 always_ff @(posedge clk)
@@ -126,7 +132,15 @@ always_ff @(posedge clk)
         for (int i = 0; i < MAX_OPERANDS; i++) begin
             if (arn_valid[i]) begin
                 remap_file[arn_input[i]].valid <= 1;
+                remap_file[arn_input[i]].ready <= 0;
                 remap_file[arn_input[i]].prn <= prn_output[i];
+            end
+        end
+
+        // update remap file's ready bits
+        for (int i = 0; i < MAX_OPERANDS; i++) begin
+            if (set_prn_ready_valid[i]) begin
+                remap_file[set_prn_ready[i]].ready <= 1;
             end
         end
     end
