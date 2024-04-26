@@ -38,6 +38,7 @@ localparam MI_BITS = $clog2(MAX_IO);
 logic [IO_WIDTH-1:0] fifo_mem [MAX_LENGTH];
 logic [ML_BITS-1:0] fifo_head;
 logic [ML_BITS-1:0] fifo_tail;
+logic fifo_full;
 
 // number of values getting from FIFO 
 logic [MI_BITS-1:0] num_get_values;
@@ -60,7 +61,7 @@ begin
         end
 
         if (fifo_tail == fifo_head) begin
-            fifo_len = MAX_LENGTH;
+            fifo_len = fifo_full ? MAX_LENGTH : 0;
         end else if (fifo_head < fifo_tail) begin
             fifo_len = fifo_tail - fifo_head;
         end else begin
@@ -103,6 +104,7 @@ begin
         fifo_head <= 0;
         fifo_tail <= 0;
         len <= MAX_LENGTH;
+        fifo_full <= 1;
     end else begin
         // $display("num_get_values: %0d, num_put_values: %0d, fifo_len: %0d", num_get_values, num_put_values, fifo_len);
         // $display("Getting [%0d, %0d, %0d] {%0d, %0d, %0d} %0d values, new fifo_head: %0d", 
@@ -136,6 +138,7 @@ begin
         end
 
         len <= fifo_len + ML_BITS'(num_put_values) - ML_BITS'(num_get_values);
+        fifo_full <= fifo_len + ML_BITS'(num_put_values) - ML_BITS'(num_get_values) == MAX_LENGTH;
         // $display("New FIFO length: %0d\n", fifo_len + ML_BITS'(num_put_values) - ML_BITS'(num_get_values));
     end
 end
