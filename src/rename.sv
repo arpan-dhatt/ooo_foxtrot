@@ -121,6 +121,7 @@ always_comb begin
     end
 end
 
+// Update remap file
 always_ff @(posedge clk)
     if (rst) begin
         $display("Resetting Renamer");
