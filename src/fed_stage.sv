@@ -6,10 +6,10 @@ module fed_stage #(
     input logic clk,
     input logic rst,
 
-    output logic mem_rien,           // Memory read enable signal
-    output logic [63:0] mem_riaddr,  // Memory read address
-    input logic mem_rivalid,         // Indicates when memory read data is valid
-    input logic [63:0] mem_ridata,   // Memory read data
+    output logic mem_ren,           // Memory read enable signal
+    output logic [63:0] mem_raddr,  // Memory read address
+    input logic mem_rvalid,         // Indicates when memory read data is valid
+    input logic [63:0] mem_rdata,   // Memory read data
 
     input logic set_pc_valid,
     input logic [63:0] set_pc,
@@ -26,48 +26,68 @@ localparam FUC_BITS = $clog2(FU_COUNT);
 
 logic [63:0] pc;
 
+// instruction read buffer
+logic irb_valid;
+logic [63:0] irb; 
+
+// intermediate stuff for decoder
+logic [31:0] iraw_instr;
 logic [FUC_BITS-1:0] ifu_choice;
 logic [ARN_BITS-1:0] iarn_inputs[MAX_OPERANDS];
 logic [ARN_BITS-1:0] iarn_outputs[MAX_OPERANDS];
 inst_decoder #(MAX_OPERANDS) decoder (
-    .instr_valid(mem_rivalid),
-    .raw_instr(mem_ridata),
+    .instr_valid(irb_valid),
+    .raw_instr(iraw_instr),
     .fu_choice(ifu_choice),
     .arn_inputs(iarn_inputs),
     .arn_outputs(iarn_outputs)
 );
 
-// circular buffer for inflight reads
-localparam IRFIFO_LEN = 4;
-localparam IRFL_BITS = $clog2(IRFIFO_LEN);
-logic [63:0] inflight_reads_fifo[IRFIFO_LEN];
-logic [IRFL_BITS-1:0] irf_head;
-logic [IRFL_BITS-1:0] irf_tail;
-logic irf_full;
-logic [IRFL_BITS:0] irf_len;
-
-always_comb begin
-    if (irf_head == irf_tail) begin
-        irf_len = irf_full ? IRFIFO_LEN : 0;
-    end else if (irf_head < irf_tail) begin
-        irf_len = irf_tail - irf_head;
-    end else begin
-        irf_len = IRFIFO_LEN - (irf_head - irf_tail);
+always_comb
+begin
+    // get current instruction from IRB
+    iraw_instr = 0;
+    if (irb_valid) begin
+        // opposite of current pc since reads are 1 cycle behind
+        iraw_instr = (pc & 'b111) == 0 ? irb[31:0] : irb[63:32];
     end
 end
 
 always_ff @(posedge clk)
 begin
-    output_valid <= mem_rivalid && !rst;
+    output_valid <= 0;
     if (rst) begin
         $display("Resetting FED Stage");
-        pc <= 8; // set pc back to 0x8
-        // empty inflight reads buffer
-        irf_head <= 0;
-        irf_tail <= 0;
-        irf_full <= 0;
+        irb_valid <= 0;
+        pc <= 8;
+    end else if (set_pc_valid) begin
+        // move the program counter and flush buffers
+        irb_valid <= 0;
+        pc <= set_pc;
     end else begin
-        // send memory request if 
+        if (!irb_valid || (pc & 'b111) == 0) begin
+            // read if irb empty or pc is aligned (every other cycle)
+            mem_ren <= 1;
+            mem_raddr <= pc & ~64'b111; // aligned read
+        end
+
+        if (mem_rvalid) begin
+            irb_valid <= 1;
+            irb <= mem_rdata;
+        end
+
+        if (irb_valid) begin
+            // irb_valid means we for sure have an instruction ready
+            output_valid <= 1;
+            raw_instr <= iraw_instr;
+            instr_pc <= pc - 8; // i thought it would be -4 but -8 seems to be it?
+            fu_choice <= ifu_choice;
+            arn_inputs <= iarn_inputs;
+            arn_outputs <= iarn_outputs;
+        end
+
+        // advance pc
+        pc <= pc + 4;
     end
 end
 
