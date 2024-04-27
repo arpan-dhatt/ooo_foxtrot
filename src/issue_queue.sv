@@ -45,19 +45,27 @@ module issue_queue #(parameter INST_ID_BITS = 6,
         logic [63:0] pc;  // Program counter
     } IQentry;
 
+    localparam EMPTY_STATE = 2'b00;
+    localparam WAITING_STATE = 2'b01;
+    localparam READY_STATE = 2'b11;
+
 
     IQentry queue[0: QUEUE_SIZE - 1];
 
     always_comb begin
         for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
-            // Determine state of queue
+            // Determine state of entry
+            //queue[i].state[0] = queue[i].op_valid.or();
+            //queue[i].state[1] = queue[i].op_valid.and();
+
         end
     end
 
     always_ff @(posedge clk) begin
         if(rst) begin
             for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
-            // TODO zero out entry
+            // TODO zero out entry correctly
+                queue[i] = '0;
             end
         end else begin
         
@@ -69,7 +77,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
             if(result_valid) begin
             end
 
-            // Issue instruction to attached fu if one is satisfied (zeroing out old entry)
+            // Issue instruction to attached fu if one is Ready (zeroing out old entry)
                 // Loop through entries checking for Ready state
         end
     end
