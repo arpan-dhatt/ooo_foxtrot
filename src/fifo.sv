@@ -21,6 +21,7 @@ module fifo #(
 ) (
     input logic clk,
     input logic rst,
+    input [ML_BITS:0] rst_skip, // skip N values in FIFO on reset
 
     input logic get_en [MAX_IO],                    // value indices to retrieve from FIFO
 
@@ -97,11 +98,11 @@ always_ff @(posedge clk)
 begin
     if (rst) begin
         // reset fifo values
-        $display("Resetting FIFO");
+        $display("Resetting FIFO (skipping %d values)", rst_skip);
         for (logic [ML_BITS:0] i = 0; i < MAX_LENGTH; i++) begin
             fifo_mem[IO_WIDTH'(i)] <= IO_WIDTH'(i);
         end
-        fifo_head <= 0;
+        fifo_head <= (ML_BITS)'(rst_skip);
         fifo_tail <= 0;
         len <= MAX_LENGTH;
         fifo_full <= 1;

@@ -38,6 +38,7 @@ module rename #(
 );
 
 localparam MO_BITS = $clog2(MAX_OPERANDS);
+localparam PREALLOC_PRS = 33; // x0-x31 + flag
 
 logic get_prns[MAX_OPERANDS];
 
@@ -45,6 +46,7 @@ logic [PRN_BITS:0] rem_free_prns;
 fifo #(1<<PRN_BITS, PRN_BITS, MAX_OPERANDS) prn_queue (
     .clk(clk),
     .rst(rst),
+    .rst_skip(PREALLOC_PRS), // skip architectural register files which will be pre-alloced as 0
     .get_en(get_prns),
     .put_en(free_valid),
     .put(free_prns),
@@ -126,15 +128,16 @@ always_ff @(posedge clk)
     if (rst) begin
         $display("Resetting Renamer");
         for (int i = 0; i < (1 << ARN_BITS); i++) begin
-            remap_file[i].valid <= 0;
+            remap_file[i].valid <= i < PREALLOC_PRS;
+            remap_file[i].prn <= PRN_BITS'(i);
         end
     end else if (input_valid && mapping_valid) begin // check state change requested and valid
         // update remap file with newly requested PRN's
         for (int i = 0; i < MAX_OPERANDS; i++) begin
             if (arn_valid[i]) begin
-                remap_file[arn_input[i]].valid <= 1;
-                remap_file[arn_input[i]].ready <= 0;
-                remap_file[arn_input[i]].prn <= prn_output[i];
+                remap_file[arn_output[i]].valid <= 1;
+                remap_file[arn_output[i]].ready <= 0;
+                remap_file[arn_output[i]].prn <= prn_output[i];
             end
         end
 
