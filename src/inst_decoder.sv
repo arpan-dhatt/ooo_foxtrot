@@ -20,9 +20,9 @@ module inst_decoder #(
 ) (
     input logic instr_valid,       // if we have an output
     input logic [31:0] raw_instr,  // raw instruction
-    output logic [2:0] fu_choice,   // which functional unit this instr goes to
-    output logic [5:0] lrn_inputs[MAX_OPERANDS], // logical registers for input
-    output logic [5:0] lrn_outputs[MAX_OPERANDS] // logic registers for output
+    output logic [1:0] fu_choice,   // which functional unit this instr goes to
+    output logic [5:0] arn_inputs[MAX_OPERANDS], // logical registers for input
+    output logic [5:0] arn_outputs[MAX_OPERANDS] // logic registers for output
 );
 
   /* LOGICAL */
@@ -88,7 +88,7 @@ module inst_decoder #(
   localparam [31:21] SUBS_31_21 = 11'b11101011000;
   localparam [15:10] SUBS_15_10 = 6'b000000;
 
-  /* REG MOV */
+  /* DPI */
   localparam [31:23] MOVK_3123 = 9'b111100101;
   localparam [31:23] MOVZ_3123 = 9'b110100101;
   localparam ADR_31 = 'b0;
@@ -96,6 +96,38 @@ module inst_decoder #(
   localparam ADRP_31 = 'b1;
   localparam [28:24] ADRP_2824 = ADR_2824;
 
+  // Branching
+  // B
+  localparam [31:26] B_3126 = 6'b000101;
+
+  // BR
+  localparam [31:10] BR_3110 = 22'b1101011000011111000000;
+  localparam [4:0] BR_0400 = 5'b00000;
+
+  // B.cond
+  localparam [31:24] BRcond_3124 = 8'b01010100;
+  localparam BRcond_4 = 1'b0;
+
+  // BL
+  localparam [31:26] BL_3126 = 6'b100101;
+  
+  // BLR
+  localparam [31:10] BLR_3110 = 22'b1101011000111111000000;
+  localparam [4:0] BLR_0400 = 5'b00000;
+
+  // CBNZ
+  localparam [31:24] CBNZ_3124 = 8'b10110101;
+
+  // CBZ
+  localparam [31:24] CBZ_3124 = 8'b10110100;
+
+  // RET
+  localparam [31:10] RET_3110 = 22'b1101011001011111000000;
+  localparam [4:0] RET_0400 = 5'b00000;
+
+  // Misc
+  localparam [31:0] NOP_3100 = 32'b11010101000000110010000000011111;
+  localparam [31:21] HLT_3121 = 11'b11010100010;
 
   // sets LRN based on chosen instruction format
   localparam [4:0] M_fmt  = 0;
@@ -114,68 +146,87 @@ module inst_decoder #(
   logic input_flag; // puts flag reg in final LRN input
   logic output_flag; // puts flag reg in final LRN output
   always_comb begin
-    lrn_outputs = {0, 0, 0};
+    arn_outputs = {0, 0, 0};
 
     if (instr_format == M_fmt) begin
-        lrn_inputs = {
+        arn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
             62,
             input_flag ? 32 : 62
         };
-        lrn_outputs = {
+        arn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
             62,
             output_flag ? 32 : 62
         };
     end else if (instr_format == M_fmt) begin
-        lrn_inputs = {
+        arn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
             62,
             input_flag ? 32 : 62
         };
     end else if (instr_format == M2_fmt) begin
-        lrn_inputs = {
+        arn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
             62,
             input_flag ? 32 : 62
         };
-        lrn_outputs = {
+        arn_outputs = {
             {1'b0, raw_instr[4:0]},
             {1'b0, raw_instr[14:10]},
             output_flag ? 32 : 62
         };
     end else if (instr_format == I1_fmt || instr_format == I2_fmt) begin
-        lrn_inputs = {62, 62, input_flag ? 32 : 62};
-        lrn_outputs = {
+        arn_inputs = {62, 62, input_flag ? 32 : 62};
+        arn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
             62,
             output_flag ? 32 : 62
         };
     end else if (instr_format == RC_fmt || instr_format == RR_fmt) begin
-        lrn_inputs = {
+        arn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
             {zero_reg && raw_instr[20:16] == 31 ? 1'b1 : 1'b0, raw_instr[20:16]},
             input_flag ? 32 : 62
         };
-        lrn_outputs = {
+        arn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
             62,
             output_flag ? 32 : 62
         };
     end else if (instr_format == RI_fmt) begin
-        lrn_inputs = {
+        arn_inputs = {
             {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]},
             62,
             input_flag ? 32 : 62
         };
-        lrn_outputs = {
+        arn_outputs = {
             {zero_reg && raw_instr[4:0] == 31 ? 1'b1 : 1'b0, raw_instr[4:0]},
             62,
             output_flag ? 32 : 62
         };
+    end else if (instr_format == B1_fmt) begin
+        arn_inputs = {62, 62, 62};
+        arn_outputs = {62, 62, 62};
+    end else if (instr_format == B2_fmt) begin
+        // conditional branches
+        arn_inputs = {
+            62, 62, input_flag ? 32 : 62
+        };
+        arn_outputs = {62, 62, 62};
+    end else if (instr_format == B3_fmt) begin
+        // register-relative branch
+        arn_inputs = {
+            {zero_reg && raw_instr[9:5] == 31 ? 1'b1 : 1'b0, raw_instr[9:5]}, 
+            62, input_flag ? 32 : 62
+        };
+        arn_outputs = {62, 62, 62};
+    end else if (instr_format == S_fmt) begin
+        arn_inputs = {62, 62, 62};
+        arn_outputs = {62, 62, 62};
     end else begin
-        lrn_inputs = {62, 62, 62};
-        lrn_outputs = {62, 62, 62};
+        arn_inputs = {62, 62, 62};
+        arn_outputs = {62, 62, 62};
         $display("unimplemented instruction format");
     end
   end
@@ -185,57 +236,57 @@ module inst_decoder #(
   begin
       fu_choice = 0;
       instr_format = 0;
-      lrn_inputs = {0, 0, 0};
-      lrn_outputs = {0, 0, 0};
+      arn_inputs = {0, 0, 0};
+      arn_outputs = {0, 0, 0};
       zero_reg = 1'b1;
       input_flag = 0;
       output_flag = 0;
       if (instr_valid) begin
         // CSEL
         if (raw_instr[31:21] == CSEL3121 && raw_instr[11:10] == CSEL1110) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RC_fmt;
             input_flag = 1'b1; // conditional instruction
             output_flag = 1'b0;
         end
         // CSINC, CSET, CINC
         else if (raw_instr[31:21] == CSINC3121 && raw_instr[11:10] == CSINC1110) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RC_fmt;
             input_flag = 1'b1; // conditional instruction
             output_flag = 1'b0;
         end
         // CSINV, CSETM, CINV
         else if (raw_instr[31:21] == CSINV3121 && raw_instr[11:10] == CSINV1110) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RC_fmt;
             input_flag = 1'b1; // conditional instruction
             output_flag = 1'b0;
         end
         // CSNEG, CNEG
         else if (raw_instr[31:21] == CSNEG3121 && raw_instr[11:10] == CSNEG1110) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RC_fmt;
             input_flag = 1'b1; // conditional instruction
             output_flag = 1'b0;
         end
         // MVN
         else if (raw_instr[31:21] == MVN3121 && raw_instr[15:5] == MVN1505) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RR_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // ORR
         else if (raw_instr[31:21] == ORR3121 && raw_instr[15:10] == ORR1510) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RR_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // EOR
         else if (raw_instr[31:21] == EOR3121 && raw_instr[15:10] == EOR1510) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RR_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
@@ -243,7 +294,7 @@ module inst_decoder #(
         // AND
         else if (raw_instr[31:23] == AND3123) begin
             // TODO: AND should use zero reg for input reg but SP for output reg!
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RI_fmt;
             zero_reg = 1'b0;
             input_flag = 1'b0;
@@ -251,28 +302,28 @@ module inst_decoder #(
         end
         // ANDS, TST
         else if (raw_instr[31:21] == ANDS3121 && raw_instr[15:10] == ANDS1510) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RR_fmt;
             input_flag = 1'b0;
             output_flag = 1'b1; // sets flags
         end
         // SBFM, ASR
         else if (raw_instr[31:23] == SBFM3123) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RI_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // UBFM, LSL, LSR
         else if (raw_instr[31:23] == UBFM3123) begin
-            fu_choice = 3'b000; // Logical FU
+            fu_choice = 2'b00; // Logical FU
             instr_format = RI_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // LDUR
         else if (raw_instr[31:21] == LDUR3121) begin
-            fu_choice = 3'b001; // LSU FU
+            fu_choice = 2'b01; // LSU FU
             instr_format = M_fmt;
             zero_reg = 1'b0;
             input_flag = 1'b0;
@@ -280,7 +331,7 @@ module inst_decoder #(
         end
         // STUR
         else if (raw_instr[31:21] == STUR3121) begin
-            fu_choice = 3'b001; // LSU FU
+            fu_choice = 2'b01; // LSU FU
             instr_format = M_fmt;
             zero_reg = 1'b0;
             input_flag = 1'b0;
@@ -288,7 +339,7 @@ module inst_decoder #(
         end
         // LDP
         else if (raw_instr[31:22] == LDP3122) begin
-            fu_choice = 3'b001; // LSU FU
+            fu_choice = 2'b01; // LSU FU
             instr_format = M2_fmt;
             zero_reg = 1'b0;
             input_flag = 1'b0;
@@ -296,7 +347,7 @@ module inst_decoder #(
         end
         // STP
         else if (raw_instr[31:22] == STP3122) begin
-            fu_choice = 3'b001; // LSU FU
+            fu_choice = 2'b01; // LSU FU
             instr_format = M2_fmt;
             zero_reg = 1'b0;
             input_flag = 1'b0;
@@ -304,57 +355,127 @@ module inst_decoder #(
         end
         // ADD
         else if (raw_instr[31:22] == ADD_31_22) begin
-            fu_choice = 3'b010; // Arithmetic FU
+            fu_choice = 2'b10; // Arithmetic FU
             instr_format = RI_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // ADDS
         else if (raw_instr[31:21] == ADDS_31_21 && raw_instr[15:10] == ADDS_15_10) begin
-            fu_choice = 3'b010; // Arithmetic FU
+            fu_choice = 2'b10; // Arithmetic FU
             instr_format = RR_fmt;
             input_flag = 1'b0;
             output_flag = 1'b1; // sets flags
         end
         // SUB
         else if (raw_instr[31:22] == SUB_31_22) begin
-            fu_choice = 3'b010; // Arithmetic FU
+            fu_choice = 2'b10; // Arithmetic FU
             instr_format = RI_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // SUBS, CMP
         else if (raw_instr[31:21] == SUBS_31_21 && raw_instr[15:10] == SUBS_15_10) begin
-            fu_choice = 3'b010; // Arithmetic FU
+            fu_choice = 2'b10; // Arithmetic FU
             instr_format = RR_fmt;
             input_flag = 1'b0;
             output_flag = 1'b1; // sets flags
         end
         // MOVK
         else if (raw_instr[31:23] == MOVK_3123) begin
-            fu_choice = 3'b011; // Register Move FU
+            fu_choice = 2'b11; // Register Move FU
             instr_format = I1_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // MOVZ
         else if (raw_instr[31:23] == MOVZ_3123) begin
-            fu_choice = 3'b011; // Register Move FU
+            fu_choice = 2'b11; // Register Move FU
             instr_format = I1_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // ADR
         else if (raw_instr[31] == ADR_31 && raw_instr[28:24] == ADR_2824) begin
-            fu_choice = 3'b011; // Register Move FU
+            fu_choice = 2'b11; // Register Move FU
             instr_format = I2_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
         // ADRP
         else if (raw_instr[31] == ADRP_31 && raw_instr[28:24] == ADRP_2824) begin
-            fu_choice = 3'b011; // Register Move FU
+            fu_choice = 2'b11; // Register Move FU
             instr_format = I2_fmt;
+            input_flag = 1'b0;
+            output_flag = 1'b0;
+        end
+        // B
+        else if (raw_instr[31:26] == B_3126) begin
+            fu_choice = 2'b10; // ALU (immediate offset from PC)
+            instr_format = B1_fmt;
+            input_flag = 1'b0;
+            output_flag = 1'b0;
+        end
+        // BR
+        else if (raw_instr[31:10] == BR_3110 && raw_instr[4:0] == BR_0400) begin
+            fu_choice = 2'b10; // ALU
+            instr_format = B3_fmt;
+            input_flag = 1'b0;
+            output_flag = 1'b0;
+        end
+        // B.cond
+        else if (raw_instr[31:24] == BRcond_3124 && raw_instr[4] == BRcond_4) begin
+            fu_choice = 2'b00; // Logical FU
+            instr_format = B2_fmt;
+            input_flag = 1'b1; // conditional instruction
+            output_flag = 1'b0;
+        end
+        // BL  
+        else if (raw_instr[31:26] == BL_3126) begin
+            fu_choice = 2'b01; // LSU (need to store stack pointer)
+            instr_format = B1_fmt;
+            input_flag = 1'b0;
+            output_flag = 1'b0;
+        end
+        // BLR
+        else if (raw_instr[31:10] == BLR_3110 && raw_instr[4:0] == BLR_0400) begin
+            fu_choice = 2'b01; // LSU (need to store stack pointer)
+            instr_format = B3_fmt;  
+            input_flag = 1'b0;
+            output_flag = 1'b0;
+        end
+        // CBNZ
+        else if (raw_instr[31:24] == CBNZ_3124) begin
+            fu_choice = 2'b00; // Logical FU
+            instr_format = I2_fmt;
+            input_flag = 1'b1; // conditional instruction
+            output_flag = 1'b0;
+        end
+        // CBZ 
+        else if (raw_instr[31:24] == CBZ_3124) begin
+            fu_choice = 2'b00; // Logical FU
+            instr_format = I2_fmt;
+            input_flag = 1'b1; // conditional instruction  
+            output_flag = 1'b0;
+        end
+        // RET
+        else if (raw_instr[31:10] == RET_3110 && raw_instr[4:0] == RET_0400) begin
+            fu_choice = 2'b01; // LSU (need to load stack pointer)
+            instr_format = B3_fmt;
+            input_flag = 1'b0;  
+            output_flag = 1'b0;
+        end
+        // NOP
+        else if (raw_instr[31:0] == NOP_3100) begin
+            fu_choice = 2'b00; // just send to logical (doesn't matter)
+            instr_format = S_fmt;
+            input_flag = 1'b0;
+            output_flag = 1'b0;
+        end 
+        // HLT
+        else if (raw_instr[31:21] == HLT_3121) begin
+            fu_choice = 2'b00; // just send to logical (doesn't matter)
+            instr_format = S_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
         end
@@ -364,8 +485,8 @@ module inst_decoder #(
         zero_reg = 0;
         input_flag = 0;
         output_flag = 0;
-        lrn_inputs = {62, 62, 62};
-        lrn_outputs = {62, 62, 62};
+        arn_inputs = {62, 62, 62};
+        arn_outputs = {62, 62, 62};
       end
   end
 endmodule

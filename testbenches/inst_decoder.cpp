@@ -13,13 +13,13 @@
 
 struct testcase {
   int fu_choice;
-  std::array<int, 3> lrn_inputs;
-  std::array<int, 3> lrn_outputs;
+  std::array<int, 3> arn_inputs;
+  std::array<int, 3> arn_outputs;
 
   testcase(int fu_choice,
-           std::array<int, 3> lrn_inputs,
-           std::array<int, 3> lrn_outputs) :
-      fu_choice(fu_choice), lrn_inputs(lrn_inputs), lrn_outputs(lrn_outputs) {}
+           std::array<int, 3> arn_inputs,
+           std::array<int, 3> arn_outputs) :
+      fu_choice(fu_choice), arn_inputs(arn_inputs), arn_outputs(arn_outputs) {}
 
   void check(Vinst_decoder *fu) const {
       if (fu->fu_choice != fu_choice) {
@@ -30,14 +30,14 @@ struct testcase {
 
       for (int i = 0; i < 3; i++) {
           std::ostringstream msg;
-          if (lrn_inputs[i] != fu->lrn_inputs[i]) {
-              msg << "Expected lrn_inputs[" << i << "] to be " << lrn_inputs[i]
-                  << " got " << fu->lrn_inputs[i];
+          if (arn_inputs[i] != fu->arn_inputs[i]) {
+              msg << "Expected arn_inputs[" << i << "] to be " << arn_inputs[i]
+                  << " got " << fu->arn_inputs[i];
               throw std::runtime_error(msg.str());
           }
-          if (lrn_outputs[i] != fu->lrn_outputs[i]) {
-              msg << "Expected lrn_outputs[" << i << "] to be "
-                  << lrn_outputs[i] << " got " << fu->lrn_outputs[i];
+          if (arn_outputs[i] != fu->arn_outputs[i]) {
+              msg << "Expected arn_outputs[" << i << "] to be "
+                  << arn_outputs[i] << " got " << fu->arn_outputs[i];
               throw std::runtime_error(msg.str());
           }
       }
@@ -210,13 +210,13 @@ int main(int argc, char **argv) {
             std::cout << "FAILURE" << std::endl;
             std::cout << "Instruction Decoder Outputs:" << std::dec << std::endl;
             std::cout << "fu_choice: " << static_cast<int>(fu->fu_choice) << std::endl;
-            std::cout << "lrn_inputs:" << std::endl;
+            std::cout << "arn_inputs:" << std::endl;
             for (int k = 0; k < 3; k++) {
-                std::cout << "  Input " << k << ": " << static_cast<int>(fu->lrn_inputs[k]) << std::endl;
+                std::cout << "  Input " << k << ": " << static_cast<int>(fu->arn_inputs[k]) << std::endl;
             }
-            std::cout << "lrn_outputs:" << std::endl;
+            std::cout << "arn_outputs:" << std::endl;
             for (int k = 0; k < 3; k++) {
-                std::cout << "  Output " << k << ": " << static_cast<int>(fu->lrn_outputs[k]) << std::endl;
+                std::cout << "  Output " << k << ": " << static_cast<int>(fu->arn_outputs[k]) << std::endl;
             }
             std::cout << "-----------------------------" << std::endl;
         }
