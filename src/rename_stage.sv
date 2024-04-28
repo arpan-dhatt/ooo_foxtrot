@@ -31,6 +31,8 @@ module rename_stage #(
     // TODO: gotta handle rollback too
     // MODULE OUTPUTS
     output logic mapping_valid,
+    // combinational output valid for ROB
+    output logic mapping_valid_comb,
     // pass through
     output logic [INST_ID_BITS-1:0] inst_id,
     output logic [31:0] raw_instr,
@@ -61,6 +63,11 @@ logic [PRN_BITS-1:0] renamer_prn_output[MAX_OPERANDS];
 logic renamer_mapping_inputs_valid[MAX_OPERANDS];
 logic [PRN_BITS-1:0] renamer_mapping_inputs_prn[MAX_OPERANDS];
 logic [ARN_BITS-1:0] renamer_mapping_inputs_arn[MAX_OPERANDS];
+
+always_comb
+begin
+    mapping_valid_comb = renamer_mapping_valid;
+end
 
 rename #(ARN_BITS, PRN_BITS, MAX_OPERANDS) renamer (
     .clk(clk),

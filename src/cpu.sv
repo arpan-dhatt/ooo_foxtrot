@@ -67,6 +67,7 @@ logic [INST_ID_BITS-1:0] rob_to_renamer_new_inst_id;
 
 // Renamer to issue queue signals
 logic renamer_output_valid;
+logic renamer_output_valid_comb;
 logic [INST_ID_BITS-1:0] renamer_inst_id;
 logic [31:0] renamer_raw_instr;
 logic [63:0] renamer_instr_pc;
@@ -153,6 +154,7 @@ rename_stage renamer (
 
     // renamer outputs
     .mapping_valid(renamer_output_valid),
+    .mapping_valid_comb(renamer_output_valid_comb),
     .inst_id(renamer_inst_id),
     .raw_instr(renamer_raw_instr),
     .instr_pc(renamer_instr_pc),
@@ -176,7 +178,7 @@ rob reorder_buffer (
     .rst(rst),
 
     // Renamer dispatch
-    .inst_valid(renamer_output_valid),
+    .inst_valid(renamer_output_valid_comb),
     .inst_ready(rob_inst_ready),
     .pc(renamer_instr_pc),
     .mapping_inputs_valid(renamer_to_rob_mapping_inputs_valid),
