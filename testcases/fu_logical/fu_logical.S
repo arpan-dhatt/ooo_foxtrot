@@ -3,8 +3,8 @@
 _start:
     // CSEL
     csel x14, x11, x12, lt
-    csel x14, x11, x12, mi
-    csel x1, x2, x3, eq
+    csel x14, x14, x12, mi
+    csel x1, x14, x3, eq
 
     // CSINC
     csinc x4, x5, x6, lt
