@@ -24,6 +24,29 @@ localparam FUC_BITS = $clog2(FU_COUNT);
 localparam PRN_BITS = 6;
 localparam INST_ID_BITS = 6;
 
+// physical register file
+
+localparam OP_R_PORTS = FU_COUNT;
+localparam OP_W_PORTS = FU_COUNT;
+logic prf_ren[MAX_OPERANDS][OP_R_PORTS];
+logic [PRN_BITS-1:0] prf_rprn[MAX_OPERANDS][OP_R_PORTS];
+logic [63:0] prf_rdata[MAX_OPERANDS][OP_R_PORTS];
+logic prf_wen[MAX_OPERANDS][OP_W_PORTS];
+logic [PRN_BITS-1:0] prf_wprn[MAX_OPERANDS][OP_W_PORTS];
+logic [63:0] prf_wdata[MAX_OPERANDS][OP_W_PORTS];
+prf #(OP_R_PORTS, OP_W_PORTS) reg_file (
+    .clk(clk),
+    .rst(rst),
+
+    .op_ren(prf_ren),
+    .op_rprn(prf_rprn),
+    .op_rdata(prf_rdata),
+
+    .op_wen(prf_wen),
+    .op_wprn(prf_wprn),
+    .op_wdata(prf_wdata)
+);
+
 // Fed stage signals
 // inputs
 logic fed_set_pc_valid;
