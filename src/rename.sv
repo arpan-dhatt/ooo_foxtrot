@@ -78,7 +78,6 @@ always_comb begin
         end else begin // valid ARN (0-32) needs remapping
             prn_input_valid[i] = 1;
             prn_input[i] = remap_file[arn_input[i]].prn;
-            $display("%d %b", i, remap_file[arn_input[i]].ready);
             prn_input_ready[i] = remap_file[arn_input[i]].ready;
             // forward ready signals that finished in same cycle
             for (int j = 0; j < MAX_OPERANDS; j++) begin
