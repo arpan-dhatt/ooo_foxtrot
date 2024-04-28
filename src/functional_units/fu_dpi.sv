@@ -3,14 +3,14 @@
 module fu_dpi (
     fu_if.fu fu
 );
-    // MOVK
-    localparam [31:23] MOVK_3123 = 9'b111100101;
-    // MOVZ
+  // MOVK
+  localparam [31:23] MOVK_3123 = 9'b111100101;
+  // MOVZ
   localparam [31:23] MOVZ_3123 = 9'b110100101;
-    // ADR
+  // ADR
   localparam ADR_31 = 'b0;
   localparam [28:24] ADR_2824 = 5'b10000;
-    // ADRP
+  // ADRP
   localparam ADRP_31 = 'b1;
   localparam [28:24] ADRP_2824 = ADR_2824;
 
@@ -18,27 +18,43 @@ module fu_dpi (
   logic [63:0] a, b, s;
   logic n, z, c, v;
   logic setcond, setrd;
+  logic hw, imm;
   always_comb begin // TODO for power efficiency, add a check for inst_valid
     a = fu.op[0];
-    if(fu.inst[31:22] == ADD_31_22) begin // ADD
-      b = {{52{1'b0}}, fu.inst[21:10]}; //imm12 + Xn
+    if(fu.inst[31:23] == MOVK_3123) begin // MOVK
+      s = a; // save old value of register
+      hw = fu.inst[22:21];
+      imm = fu.inst[20:5];
+      case(hw)
+        2'b00: s[15:0] = imm;
+        2'b01: s[31:16] = imm;
+        2'b10: s[47:32] = imm;
+        2'b11: s[63:48] = imm;
+      endcase
       setcond = 1'b0;
       setrd = 1'b1;
-    end else if (fu.inst[31:21] == ADDS_31_21 && fu.inst[15:10] == ADDS_15_10) begin // ADDS
-      b = fu.op[1]; // Xn + Xm
-      setcond = 1'b1;
-      setrd = 1'b1;
-    end else if (fu.inst[31:22] == SUB_31_22) begin // SUB
-      fu.fu_out_data[0] <= fu.op[0] + (~fu.inst[21:10] + 1); // Xn - imm12 = Xn + (~imm12 + 1)
-      b = ~{{52{1'b0}}, fu.inst[21:10]} + 1;
+    end else if (fu.inst[31:23] == MOVZ_3123) begin // MOVZ
+      hw = fu.inst[22:21];
+      imm = fu.inst[20:5];
+      s = 64'b0; // zero out the other bits
+      case(hw)
+        2'b00: s[15:0] = imm;
+        2'b01: s[31:16] = imm;
+        2'b10: s[47:32] = imm;
+        2'b11: s[63:48] = imm;
+      endcase
       setcond = 1'b0;
       setrd = 1'b1;
-    end else if (fu.inst[31:21] == SUBS_31_21 && fu.inst[15:10] == SUBS_15_10) begin // SUBS, CMP
-      b = ~fu.op[1] + 1; // Xn - Xm = Xn + (~XM + 1)
-      setcond = 1'b1;
-      setrd = 1'(fu.inst[4:0] != CMP_04_00);
+    end else if (fu.inst[31] == ADR_31 && fu.inst[28:24] == ADR_2824) begin // ADR
+      s = fu.pc + {45'b0, inst[23:5]}; // add pc + imm
+      setcond = 1'b0;
+      setrd = 1'b1;
+    end else if (fu.inst[31] == ADRP_31 && fu.inst[28:24] == ADRP_2824) begin // ADRP
+      b = {fu.pc + inst[23:5], 12'b0}; // add pc + imm, shift left by 12
+      setcond = 1'b0;
+      setrd = 1'b1;
     end
-    {c, s} = a + b;
+    s = a + b;
     n = s[63];
     z = ~(|s);
     v = a[63]^b[63]^s[63]^c;
