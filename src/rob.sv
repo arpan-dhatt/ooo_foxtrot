@@ -84,6 +84,7 @@ logic [INST_ID_BITS-1:0] flush_start;
 
 assign inst_ready = !start_flush && !is_flushing && !is_full;
 assign stall_rename = start_flush || is_flushing;
+assign new_inst_id = head;
 
 always_ff @(posedge clk)
 begin
@@ -107,8 +108,6 @@ begin
                 buffer_mapping_prn[head][i] <= mapping_inputs_prn[i];
                 buffer_mapping_arn[head][i] <= mapping_inputs_arn[i];
             end
-
-            new_inst_id <= head;
 
             head <= head + 1;
             is_full <= head + 1 == tail;
