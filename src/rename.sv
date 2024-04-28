@@ -118,8 +118,8 @@ always_comb begin
     // retrieve previous physical register value of remap file to send to ROB
     for (int i = 0; i < MAX_OPERANDS; i++) begin
         mapping_inputs_valid[i] = get_prns[i];
-        mapping_inputs_arn[i] = arn_input[i];
-        mapping_inputs_prn[i] = remap_file[arn_input[i]].prn;
+        mapping_inputs_arn[i] = arn_output[i];
+        mapping_inputs_prn[i] = remap_file[arn_output[i]].prn;
     end
 end
 
