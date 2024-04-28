@@ -11,33 +11,39 @@ module issue_queue #(parameter INST_ID_BITS = 6,
     output logic queue_full,
 
     // Single instruction receive (From renamer)
-    input logic [INST_ID_BITS-1:0] inst_id,  // Instruction ID
-    input logic [31:0] inst,  // Instruction
-    input logic [PRN_BITS-1:0] op_prn[MAX_OPERANDS],  // Input operand prns
-    input logic [PRN_BITS-1:0] out_prn[MAX_OPERANDS],  // Output physical register numbers
-    input logic [63:0] pc,  // Program counter
+    input logic [INST_ID_BITS-1:0] inst_id,
+    input logic [31:0] raw_instr,
+    input logic [63:0] instr_pc,
+    input logic prn_input_valid[MAX_OPERANDS],
+    input logic prn_input_ready[MAX_OPERANDS], // Ready to read from PRF
+    input logic [PRN_BITS-1:0] prn_input[MAX_OPERANDS],
+    input logic prn_output_valid[MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS],
 
     // Active prn status update (From all FUs)
     input logic result_valid,
     input logic [PRN_BITS-1:0] result_prn,
-    // input logic [INST_ID_BITS-1:0] result_inst_id, // TODO: Might be the inst_id of the dependency instead of prn
     input logic [63:0] result_value,
 
     // FU control interface
-    fu_if.ctrl ctrl
+    fu_if.ctrl ctrl,
 
+    // Phy register file interface
+    // outputs: enable, prn, inputs: prf_op,
+    input logic prf_op[MAX_OPERANDS],
+    output logic prf_read_enable[MAX_OPERANDS],
+    output logic prf_read_prn[MAX_OPERANDS]
     );
 
 
-    typedef struct packed {
-        logic [1:0] state; // Ready (All deps satisfied), Waiting (Not all deps satisfied), Empty
+    typedef struct  {
         logic [INST_ID_BITS-1:0] inst_id;
         logic [31:0] inst;
 
         // Operand metadata and values
-        logic                   op_valid[MAX_OPERANDS]; // Status for a single operand
+        logic                   op_valid[MAX_OPERANDS]; // Which operands are actually utilized
+        logic                   op_ready[MAX_OPERANDS]; // Which operands are satisfied
         logic [PRN_BITS-1:0]    op_prn[MAX_OPERANDS]; // Which prn is it waiting on 
-        // logic [INST_ID_BITS-1:0] op_inst_id; // TODO: Might be the inst_id of the dependency instead of prn
         logic [63:0]            op[MAX_OPERANDS]; // Value of a satisfied operand 
 
         // Additional pass-through data
@@ -45,46 +51,57 @@ module issue_queue #(parameter INST_ID_BITS = 6,
         logic [63:0] pc;  // Program counter
     } IQentry;
 
-    localparam EMPTY_STATE = 2'b00;
-    localparam WAITING_STATE = 2'b01;
-    localparam READY_STATE = 2'b11;
+    localparam EMPTY_STATE = 2'b00; // Empty entry
+   // localparam WAITING_PRF_READ_STATE = 2'b01; // Waiting for initial PRF read
+    localparam WAITING_STATE = 2'b10; // Waiting for dynamic prn snoops
+    localparam READY_STATE = 2'b11; // Read for dispatch
 
-
+    logic [1:0] queue_state[0: QUEUE_SIZE - 1];
     IQentry queue[0: QUEUE_SIZE - 1];
 
     always_comb begin
         for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
-            // Determine state of entry
-            //queue[i].state[0] = queue[i].op_valid.or();
-            //queue[i].state[1] = queue[i].op_valid.and();
-
+            if(queue_state[i] != EMPTY_STATE) begin
+                queue_state[i] = (queue[i].op_ready == queue[i].op_valid) ? READY_STATE : queue_state[i];
+            end
         end
 
-        queue_full = entry_count == QUEUE_SIZE;
+        // Ensures that operands in prf are ready when we hit insertion
+        if(queue_inst_valid) begin
+            prf_read_enable = prn_input_ready; 
+            prf_read_prn = prn_input;
+        end
+
+        queue_full = queue_state.and != EMPTY_STATE; // TODO make sure this reduction is valid in verilator, see IEEE 1800-2017 7.12.3
         
     end
 
-    logic [$clog2(QUEUE_SIZE) - 1: 0] entry_count;
+    logic [$clog2(QUEUE_SIZE): 0] entry_count;
     logic [$clog2(QUEUE_SIZE) - 1: 0] index;
 
     always_ff @(posedge clk) begin
         if(rst) begin
-            for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
-            // TODO zero out entry correctly
+            for(int i = 0; i < QUEUE_SIZE; i++) begin
+                queue_state[i] <= EMPTY_STATE;
                 queue[i] <= '0;
-                entry_count <= 0;
             end
         end else begin
         
-            // Handle instruction receive
-            if(queue_inst_valid && !queue_full) begin
-                for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
-                    if(queue[i].state == EMPTY_STATE) begin
-                        // TODO insert
+            // Handle instruction insert
+            if(queue_inst_valid && (queue_state.and == EMPTY_STATE)) begin
+                for(int i = 0; i < QUEUE_SIZE; i++) begin
+                    if(queue_state[i].state == EMPTY_STATE) begin
+                        queue_state[i].state <= WAITING_STATE;
+                        queue[i].inst_id <= inst_id;
+                        queue[i].inst <= raw_instr;
 
-                        
+                        queue[i].op_valid <= prn_input_valid;
+                        queue[i].op_ready <= prn_input_ready;
+                        queue[i].op_prn <= prn_input;
+                        queue[i].op <= prf_op;
 
-                        entry_count <= entry_count + 1;
+                        queue[i].out_prn <= prn_output;
+                        queue[i].pc <= instr_pc;
                         break;
                     end
                 end
@@ -92,26 +109,33 @@ module issue_queue #(parameter INST_ID_BITS = 6,
 
             // Handle prn status update
             if(result_valid) begin
-                
+                for(int i = 0; i < QUEUE_SIZE; i++) begin
+                    for(int j = 0; j < MAX_OPERANDS; j++) begin
+                        if((queue_state[i] != EMPTY_STATE) && queue[i].op_valid[j] && queue[i].op_prn[j] == result_prn) begin
+                            queue[i].op_ready[j] <= 1'b1;
+                            queue[i].op[j] <= result_value;
+                            break;
+                        end
+                    end
+                end
             end
 
             // Issue instruction to attached fu if one is Ready (zeroing out old entry)
                 // Loop through entries checking for Ready state
             if(ctrl.fu_ready) begin
-                for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
-                    if(queue[(index + i) % QUEUE_SIZE].state == READY_STATE) begin
+                for(int i = 0; i < QUEUE_SIZE; i++) begin
+                    if(queue_state[(index + i) % QUEUE_SIZE].state == READY_STATE) begin
                         // inst_id, inst, op, out_prn, pc, inst_valid,
 
                         ctrl.inst_id <= queue[(index + i) % QUEUE_SIZE].inst_id;
                         ctrl.inst <= queue[(index + i) % QUEUE_SIZE].inst;
-                        ctrl.op <= queue[(index + i) % QUEUE_SIZE].op;
+                        ctrl.op <= queue[(index + i) % QUEUE_SIZE].op; // TODO Might need to handle 0 register
                         ctrl.out_prn <= queue[(index + i) % QUEUE_SIZE].out_prn;
                         ctrl.pc <= queue[(index + i) % QUEUE_SIZE].pc;
 
                         ctrl.inst_valid <= 1'b1;
 
                         index <= (index + i) % QUEUE_SIZE; // Round robin
-
                         queue[(index + i) % QUEUE_SIZE] <= '0; // Empty the entry
                         break;
                     end
