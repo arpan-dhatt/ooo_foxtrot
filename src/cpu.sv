@@ -160,7 +160,7 @@ rename_stage renamer (
     .instr_pc(renamer_instr_pc),
     .fu_choice(renamer_fu_choice),
     .prn_input_valid(renamer_prn_input_valid),
-    .prn_input_ready(renamer_prn_output_valid),
+    .prn_input_ready(renamer_prn_input_ready),
     .prn_input(renamer_prn_input),
     .prn_output_valid(renamer_prn_output_valid),
     .prn_output(renamer_prn_output),

@@ -78,6 +78,8 @@ always_comb begin
         end else begin // valid ARN (0-32) needs remapping
             prn_input_valid[i] = 1;
             prn_input[i] = remap_file[arn_input[i]].prn;
+            $display("%d %b", i, remap_file[arn_input[i]].ready);
+            prn_input_ready[i] = remap_file[arn_input[i]].ready;
             // forward ready signals that finished in same cycle
             for (int j = 0; j < MAX_OPERANDS; j++) begin
                 if (set_prn_ready_valid[j] && prn_input[i] == set_prn_ready[j]) begin
@@ -129,6 +131,7 @@ always_ff @(posedge clk)
         $display("Resetting Renamer");
         for (int i = 0; i < (1 << ARN_BITS); i++) begin
             remap_file[i].valid <= i < PREALLOC_PRS;
+            remap_file[i].ready <= i < PREALLOC_PRS;
             remap_file[i].prn <= PRN_BITS'(i);
         end
     end else if (input_valid && mapping_valid) begin // check state change requested and valid
