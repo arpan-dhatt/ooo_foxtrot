@@ -1,7 +1,7 @@
 module issue_queue #(parameter INST_ID_BITS = 6,
                      parameter PRN_BITS = 6,
-                     parameter MAX_OPERANDS = 3,
-                     parameter QUEUE_SIZE = 5)
+                     parameter MAX_OPERANDS = 3, 
+                     parameter QUEUE_SIZE = 4) // power of 2
     (
     input logic clk,
     input logic rst,
@@ -59,26 +59,64 @@ module issue_queue #(parameter INST_ID_BITS = 6,
             //queue[i].state[1] = queue[i].op_valid.and();
 
         end
+
+        queue_full = entry_count == QUEUE_SIZE;
+        
     end
+
+    logic [$clog2(QUEUE_SIZE) - 1: 0] entry_count;
+    logic [$clog2(QUEUE_SIZE) - 1: 0] index;
 
     always_ff @(posedge clk) begin
         if(rst) begin
             for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
             // TODO zero out entry correctly
-                queue[i] = '0;
+                queue[i] <= '0;
+                entry_count <= 0;
             end
         end else begin
         
             // Handle instruction receive
             if(queue_inst_valid && !queue_full) begin
+                for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
+                    if(queue[i].state == EMPTY_STATE) begin
+                        // TODO insert
+
+                        
+
+                        entry_count <= entry_count + 1;
+                        break;
+                    end
+                end
             end
 
             // Handle prn status update
             if(result_valid) begin
+                
             end
 
             // Issue instruction to attached fu if one is Ready (zeroing out old entry)
                 // Loop through entries checking for Ready state
+            if(ctrl.fu_ready) begin
+                for(int i = 0; i < QUEUE_SIZE - 1; i++) begin
+                    if(queue[(index + i) % QUEUE_SIZE].state == READY_STATE) begin
+                        // inst_id, inst, op, out_prn, pc, inst_valid,
+
+                        ctrl.inst_id <= queue[(index + i) % QUEUE_SIZE].inst_id;
+                        ctrl.inst <= queue[(index + i) % QUEUE_SIZE].inst;
+                        ctrl.op <= queue[(index + i) % QUEUE_SIZE].op;
+                        ctrl.out_prn <= queue[(index + i) % QUEUE_SIZE].out_prn;
+                        ctrl.pc <= queue[(index + i) % QUEUE_SIZE].pc;
+
+                        ctrl.inst_valid <= 1'b1;
+
+                        index <= (index + i) % QUEUE_SIZE; // Round robin
+
+                        queue[(index + i) % QUEUE_SIZE] <= '0; // Empty the entry
+                        break;
+                    end
+                end
+            end
         end
     end
 
