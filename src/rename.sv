@@ -82,9 +82,9 @@ always_comb begin
                     prn_input_ready[i] = 1;
                 end
             end
-            if (!remap_file[arn_input[i]].valid) begin
-                $display("ERROR: Assigning ARN %0d an empty remap entry!", arn_input[i]);
-            end
+            // if (!remap_file[arn_input[i]].valid && input_valid) begin
+            //     $display("ERROR: Assigning ARN %0d an empty remap entry!", arn_input[i]);
+            // end
         end
     end 
 
@@ -103,7 +103,7 @@ always_comb begin
     if ((PRN_BITS+1)'(num_requested_prns) > rem_free_prns) begin
         mapping_valid = 0;
     end else begin
-        mapping_valid = 1;
+        mapping_valid = input_valid;
     end
 
     // set getter enable for PRN queue

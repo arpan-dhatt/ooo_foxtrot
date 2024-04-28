@@ -69,6 +69,8 @@ begin
             // read if irb empty or pc is aligned (every other cycle)
             mem_ren <= 1;
             mem_raddr <= pc & ~64'b111; // aligned read
+        end else begin
+            mem_ren <= 0;
         end
 
         if (mem_rvalid) begin

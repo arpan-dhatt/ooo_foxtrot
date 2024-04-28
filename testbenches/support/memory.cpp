@@ -7,9 +7,12 @@
 #include <cassert>
 #include <elfio/elfio.hpp>
 
-Memory::Memory(size_t size, size_t latency)
+Memory::Memory(size_t size, size_t latency, size_t ports)
         : size(size), latency(latency) {
     data = new uint8_t[size];
+    for (size_t i = 0; i < ports; i++) {
+        read_queues.emplace_back();
+    }
     std::memset(data, 0, size);
 }
 
@@ -57,13 +60,14 @@ void Memory::load_elf(const std::string& file_path) {
     }
 }
 
-void Memory::write(uint64_t addr, uint64_t value) {
+void Memory::write(uint64_t addr, uint64_t value, size_t port) {
     if (addr < size) {
         *reinterpret_cast<uint64_t*>(&data[addr]) = value;
     }
 }
 
-void Memory::read(uint64_t addr) {
+void Memory::read(uint64_t addr, size_t port) {
+    auto& read_queue = read_queues[port];
     if (addr < size) {
         // +1 since usage is queue -> update -> get
         read_queue.emplace_back(latency + 1, addr);
@@ -71,12 +75,15 @@ void Memory::read(uint64_t addr) {
 }
 
 void Memory::update() {
-    for (auto& [cycles, addr] : read_queue) {
-        cycles--;
+    for (auto& read_queue : read_queues) {
+        for (auto& [cycles, addr] : read_queue) {
+            cycles--;
+        }
     }
 }
 
-std::optional<uint64_t> Memory::get_read_data() {
+std::optional<uint64_t> Memory::get_read_data(size_t port) {
+    auto& read_queue = read_queues[port];
     if (!read_queue.empty() && read_queue.front().first == 0) {
         uint64_t addr = read_queue.front().second;
         read_queue.pop_front();
@@ -118,7 +125,7 @@ void Memory::compare_with_file(const std::string& file_path) {
     }
 }
 
-void Memory::compare_values(uint64_t addr, const std::vector<uint64_t>& values) {
+void Memory::compare_values(uint64_t addr, const std::vector<uint64_t>& values) const {
     bool differences_found = false;
 
     for (size_t i = 0; i < values.size(); i++) {
