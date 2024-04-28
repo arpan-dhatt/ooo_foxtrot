@@ -51,13 +51,17 @@ localparam ROB_STATE_FLUSHED = 2;
 typedef struct {
     logic [1:0] state;
     logic [63:0] pc;
-    logic mapping_valid[MAX_OPERANDS];
-    logic [PRN_BITS-1:0] mapping_prn[MAX_OPERANDS];
-    logic [5:0] mapping_arn[MAX_OPERANDS];
+    // _Verilator ensures we can't have nice things, so we have to have this all separate
+    // logic mapping_valid[MAX_OPERANDS];
+    // logic [PRN_BITS-1:0] mapping_prn[MAX_OPERANDS];
+    // logic [5:0] mapping_arn[MAX_OPERANDS];
 } ROBEntry;
 
 // circular buffer
 ROBEntry buffer[1 << INST_ID_BITS];
+logic buffer_mapping_valid[1 << INST_ID_BITS][MAX_OPERANDS];
+logic [PRN_BITS-1:0] buffer_mapping_prn[1 << INST_ID_BITS][MAX_OPERANDS];
+logic [5:0] buffer_mapping_arn[1 << INST_ID_BITS][MAX_OPERANDS];
 logic [INST_ID_BITS-1:0] head = 0;
 logic [INST_ID_BITS-1:0] tail = 0;
 logic is_full;
@@ -99,9 +103,9 @@ begin
             buffer[head].state <= ROB_STATE_ISSUED;
             buffer[head].pc <= pc;
             for (int i = 0; i < MAX_OPERANDS; i++) begin
-                buffer[head].mapping_valid[i] <= mapping_inputs_valid[i];
-                buffer[head].mapping_prn[i] <= mapping_inputs_prn[i];
-                buffer[head].mapping_arn[i] <= mapping_inputs_arn[i];
+                buffer_mapping_valid[head][i] <= mapping_inputs_valid[i];
+                buffer_mapping_prn[head][i] <= mapping_inputs_prn[i];
+                buffer_mapping_arn[head][i] <= mapping_inputs_arn[i];
             end
 
             new_inst_id <= head;
@@ -112,8 +116,8 @@ begin
         if (tail != head && (!is_flushing || tail != flush_to_id) && buffer[tail].state == ROB_STATE_COMMITED) begin
             // Retire
             for (int i = 0; i < MAX_OPERANDS; i++) begin
-                freed_prns_valid[i] <= buffer[tail].mapping_valid[i];
-                freed_prns[i] <= buffer[tail].mapping_prn[i];
+                freed_prns_valid[i] <= buffer_mapping_valid[tail][i];
+                freed_prns[i] <= buffer_mapping_prn[tail][i];
             end
             $display("Retiring instruction at %0d", buffer[tail].pc);
 
@@ -160,9 +164,9 @@ begin
                 // We free registers later through the normal retire process,
                 // since issued instructions could still write to them
                 for (int i = 0; i < MAX_OPERANDS; i++) begin
-                    reset_valid[i] <= buffer[flush_pointer].mapping_valid[i];
-                    arn_reset[i] <= buffer[flush_pointer].mapping_arn[i];
-                    prn_reset[i] <= buffer[flush_pointer].mapping_prn[i];
+                    reset_valid[i] <= buffer_mapping_valid[flush_pointer][i];
+                    arn_reset[i] <= buffer_mapping_arn[flush_pointer][i];
+                    prn_reset[i] <= buffer_mapping_prn[flush_pointer][i];
                 end
 
                 // Flush from LSU
