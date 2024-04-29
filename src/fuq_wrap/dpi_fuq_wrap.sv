@@ -1,6 +1,6 @@
 
 module dpi_fuq_wrap #(
-    parameter FU_INDEX = 2,
+    parameter FU_INDEX = 3,
     parameter INST_ID_BITS = 6,
     parameter PRN_BITS = 6,
     parameter MAX_OPERANDS = 3,
