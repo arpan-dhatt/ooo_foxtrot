@@ -21,9 +21,9 @@ module issue_queue #(parameter INST_ID_BITS = 6,
     input logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS],
 
     // Active prn status update (From all FUs)
-    input logic result_valid,
-    input logic [PRN_BITS-1:0] result_prn,
-    input logic [63:0] result_value,
+    input logic peek_valid,
+    input logic [PRN_BITS-1:0] peek_prn,
+    input logic [63:0] peek_value,
 
     // FU control interface
     fu_if.ctrl ctrl,
@@ -108,12 +108,12 @@ module issue_queue #(parameter INST_ID_BITS = 6,
             end
 
             // Handle prn status update
-            if(result_valid) begin
+            if(peek_valid) begin
                 for(int i = 0; i < QUEUE_SIZE; i++) begin
                     for(int j = 0; j < MAX_OPERANDS; j++) begin
-                        if((queue_state[i] != EMPTY_STATE) && queue[i].op_valid[j] && queue[i].op_prn[j] == result_prn) begin
+                        if((queue_state[i] != EMPTY_STATE) && queue[i].op_valid[j] && queue[i].op_prn[j] == peek_prn) begin
                             queue[i].op_ready[j] <= 1'b1;
-                            queue[i].op[j] <= result_value;
+                            queue[i].op[j] <= peek_value;
                             break;
                         end
                     end
