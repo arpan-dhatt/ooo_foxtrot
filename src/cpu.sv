@@ -79,8 +79,8 @@ logic renamer_prn_output_valid[MAX_OPERANDS];
 logic [PRN_BITS-1:0] renamer_prn_output[MAX_OPERANDS];
 
 // ready bit signals from FU's
-logic fus_prn_ready_valid[MAX_OPERANDS];
-logic [PRN_BITS-1:0] fus_prn_ready[MAX_OPERANDS];
+logic fus_prn_ready_valid[FU_COUNT][MAX_OPERANDS];
+logic [PRN_BITS-1:0] fus_prn_ready[FU_COUNT][MAX_OPERANDS];
 
 // ROB to Renamer signals
 logic rob_to_renamer_freed_prns_valid[MAX_OPERANDS];

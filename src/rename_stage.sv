@@ -23,9 +23,9 @@ module rename_stage #(
     input logic free_valid[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] free_prns[MAX_OPERANDS],
 
-    // Ready bits being received for PRN's
-    input logic set_prn_ready_valid[MAX_OPERANDS],
-    input logic [PRN_BITS-1:0] set_prn_ready[MAX_OPERANDS],
+    // Ready bits being received for PRN's from all FU's
+    input logic set_prn_ready_valid[FU_COUNT][MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] set_prn_ready[FU_COUNT][MAX_OPERANDS],
 
     // TODO: handle physical register structural hazards (stall fe/d)
     // TODO: gotta handle rollback too
@@ -69,7 +69,7 @@ begin
     mapping_valid_comb = renamer_mapping_valid;
 end
 
-rename #(ARN_BITS, PRN_BITS, MAX_OPERANDS) renamer (
+rename #(ARN_BITS, PRN_BITS, FU_COUNT, MAX_OPERANDS) renamer (
     .clk(clk),
     .rst(rst),
 

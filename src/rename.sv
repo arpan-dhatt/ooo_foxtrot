@@ -1,6 +1,7 @@
 module rename #(
     parameter ARN_BITS = 6,
     parameter PRN_BITS = 6,
+    parameter FU_COUNT = 4,
     parameter MAX_OPERANDS = 3
 ) (
     input logic clk,
@@ -15,9 +16,9 @@ module rename #(
     input logic free_valid[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] free_prns[MAX_OPERANDS],
 
-    // Ready bits being received for PRN's
-    input logic set_prn_ready_valid[MAX_OPERANDS],
-    input logic [PRN_BITS-1:0] set_prn_ready[MAX_OPERANDS],
+    // Ready bits being received for PRN's from functional units
+    input logic set_prn_ready_valid[FU_COUNT][MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] set_prn_ready[FU_COUNT][MAX_OPERANDS],
 
     // PRN inputs
     output logic prn_input_valid[MAX_OPERANDS],
@@ -79,10 +80,12 @@ always_comb begin
             prn_input_valid[i] = 1;
             prn_input[i] = remap_file[arn_input[i]].prn;
             prn_input_ready[i] = remap_file[arn_input[i]].ready;
-            // forward ready signals that finished in same cycle
-            for (int j = 0; j < MAX_OPERANDS; j++) begin
-                if (set_prn_ready_valid[j] && prn_input[i] == set_prn_ready[j]) begin
-                    prn_input_ready[i] = 1;
+            // forward ready signals that finished in same cycle from FU's
+            for (int j = 0; j < FU_COUNT; j++) begin
+                for (int k = 0; k < MAX_OPERANDS; k++) begin
+                    if (set_prn_ready_valid[j][k] && prn_input[i] == set_prn_ready[j][k]) begin
+                        prn_input_ready[i] = 1;
+                    end
                 end
             end
             // if (!remap_file[arn_input[i]].valid && input_valid) begin
@@ -144,9 +147,10 @@ always_ff @(posedge clk)
         end
 
         // update remap file's ready bits
-        for (int i = 0; i < MAX_OPERANDS; i++) begin
-            if (set_prn_ready_valid[i]) begin
-                remap_file[set_prn_ready[i]].ready <= 1;
+        for (int i = 0; i < FU_COUNT; i++) begin
+            for (int j = 0; j < MAX_OPERANDS; j++)
+            if (set_prn_ready_valid[i][j]) begin
+                remap_file[set_prn_ready[i][j]].ready <= 1;
             end
         end
     end
