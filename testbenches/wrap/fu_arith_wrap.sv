@@ -51,7 +51,7 @@ module fu_arith_wrap #(
     assign fu_out_valid = fu_if_inst.fu_out_valid;
     assign fu_ready = fu_if_inst.fu_ready;
 
-    issue_queue 
+ 
 
     // Instantiate the fu_arith module
     fu_arith fu_arith_inst (

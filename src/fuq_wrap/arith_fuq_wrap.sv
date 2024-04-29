@@ -1,9 +1,11 @@
-    // Arithmetic FU wrapper to expose fu_if.ctrl for verilator
+// Arithmetic FU wrapper to expose fu_if.ctrl for verilator
 
 module arith_fuq_wrap #(
+    parameter FU_INDEX = 2,
     parameter INST_ID_BITS = 6,
     parameter PRN_BITS = 6,
-    parameter MAX_OPERANDS = 3
+    parameter MAX_OPERANDS = 3,
+    parameter FU_COUNT = 4
     ) (
     input logic clk,
     input logic rst,
@@ -11,16 +13,8 @@ module arith_fuq_wrap #(
     // IQ control
     input logic inst_valid,
     output logic queue_ready,
-
-    // // Input arguments
-    // input logic [INST_ID_BITS-1:0] inst_id,
-    // input logic [31:0] inst,
-    // input logic [63:0] op[MAX_OPERANDS],
-    // input logic [PRN_BITS-1:0] out_prn[MAX_OPERANDS],
-    // input logic [63:0] pc,
-    // input logic inst_valid,
     
-    // New Input 
+    // Input from instruction router
     input logic [INST_ID_BITS-1:0] inst_id,
     input logic [31:0] raw_instr,
     input logic [63:0] instr_pc,
@@ -30,10 +24,9 @@ module arith_fuq_wrap #(
     input logic prn_output_valid[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS],
 
-    // PRN peek input
-    input logic peek_valid,
-    input logic [PRN_BITS-1:0] peek_prn,
-    input logic [63:0] peek_value,
+    // 
+    input logic set_prn_ready[FU_COUNT - 1][MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] set_prn[FU_COUNT - 1][MAX_OPERANDS],
 
     // Register File ports
     input logic prf_op[MAX_OPERANDS],
@@ -58,6 +51,21 @@ module arith_fuq_wrap #(
         .rst(rst)
     );
 
+    logic full_set_prn_ready[FU_COUNT][MAX_OPERANDS];
+    logic [PRN_BITS-1:0] full_set_prn[FU_COUNT][MAX_OPERANDS];
+    always_comb begin
+        for(int i = 0; i < FU_COUNT; i++) begin
+            if(i == FU_INDEX) begin
+                full_set_prn[i] = fu_arith_inst.fu.fu_out_prn;
+                full_set_prn_ready[i] = fu_arith_inst.fu.fu_out_data_valid;
+                
+            end else begin
+                full_set_prn[i] = set_prn[i - (i>FU_INDEX)];
+                full_set_prn_ready[i] = set_prn_ready[i - (i>FU_INDEX)];
+            end
+        end
+    end
+
     issue_queue arith_queue (
         .queue_ready(queue_ready),
 
@@ -73,9 +81,8 @@ module arith_fuq_wrap #(
         .prn_output(prn_output),
 
         // PRN peek
-        .peek_valid(peek_valid),
-        .peek_prn(peek_prn),
-        .peek_value(peek_value),
+        .set_prn_ready(full_set_prn_ready),
+        .set_prn(full_set_prn),
 
         // PRF ports
         .prf_op(prf_op),
