@@ -1,10 +1,10 @@
-// Arithmetic FU wrapper to expose fu_if.ctrl for verilator
+    // Arithmetic FU wrapper to expose fu_if.ctrl for verilator
 
 module fu_arith_wrap #(
     parameter INST_ID_BITS = 6,
     parameter PRN_BITS = 6,
     parameter MAX_OPERANDS = 3
-) (
+    ) (
     input logic clk,
     input logic rst,
 
@@ -23,37 +23,39 @@ module fu_arith_wrap #(
     output logic [INST_ID_BITS-1:0] fu_out_inst_id,
     output logic fu_out_valid,
     output logic fu_ready
-);
+    );
 
-  // Instantiate the fu_if interface
-  fu_if #(
-      .INST_ID_BITS(INST_ID_BITS),
-      .PRN_BITS(PRN_BITS),
-      .MAX_OPERANDS(MAX_OPERANDS)
-  ) fu_if_inst (
-      .clk(clk),
-      .rst(rst)
-  );
+    // Instantiate the fu_if interface
+    fu_if #(
+        .INST_ID_BITS(INST_ID_BITS),
+        .PRN_BITS(PRN_BITS),
+        .MAX_OPERANDS(MAX_OPERANDS)
+    ) fu_if_inst (
+        .clk(clk),
+        .rst(rst)
+    );
 
-  // Connect the input arguments to the fu_if.ctrl ports
-  assign fu_if_inst.inst_id = inst_id;
-  assign fu_if_inst.inst = inst;
-  assign fu_if_inst.op = op;
-  assign fu_if_inst.out_prn = out_prn;
-  assign fu_if_inst.pc = pc;
-  assign fu_if_inst.inst_valid = inst_valid;
+    // Connect the input arguments to the fu_if.ctrl ports
+    assign fu_if_inst.inst_id = inst_id;
+    assign fu_if_inst.inst = inst;
+    assign fu_if_inst.op = op;
+    assign fu_if_inst.out_prn = out_prn;
+    assign fu_if_inst.pc = pc;
+    assign fu_if_inst.inst_valid = inst_valid;
 
-  // Connect the output arguments from the fu_if.ctrl ports
-  assign fu_out_prn = fu_if_inst.fu_out_prn;
-  assign fu_out_data = fu_if_inst.fu_out_data;
-  assign fu_out_data_valid = fu_if_inst.fu_out_data_valid;
-  assign fu_out_inst_id = fu_if_inst.fu_out_inst_id;
-  assign fu_out_valid = fu_if_inst.fu_out_valid;
-  assign fu_ready = fu_if_inst.fu_ready;
+    // Connect the output arguments from the fu_if.ctrl ports
+    assign fu_out_prn = fu_if_inst.fu_out_prn;
+    assign fu_out_data = fu_if_inst.fu_out_data;
+    assign fu_out_data_valid = fu_if_inst.fu_out_data_valid;
+    assign fu_out_inst_id = fu_if_inst.fu_out_inst_id;
+    assign fu_out_valid = fu_if_inst.fu_out_valid;
+    assign fu_ready = fu_if_inst.fu_ready;
 
-  // Instantiate the fu_arith module
-  fu_arith fu_arith_inst (
-      .fu(fu_if_inst.fu)
-  );
+    issue_queue 
+
+    // Instantiate the fu_arith module
+    fu_arith fu_arith_inst (
+        .fu(fu_if_inst.fu)
+    );
 
 endmodule

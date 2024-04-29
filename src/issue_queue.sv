@@ -3,12 +3,9 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                      parameter MAX_OPERANDS = 3, 
                      parameter QUEUE_SIZE = 4) // power of 2
     (
-    input logic clk,
-    input logic rst,
-
     // Issue queue control
-    input logic queue_inst_valid,
-    output logic queue_full,
+    input logic inst_valid,
+    output logic queue_ready,
 
     // Single instruction receive (From renamer)
     input logic [INST_ID_BITS-1:0] inst_id,
@@ -67,20 +64,20 @@ module issue_queue #(parameter INST_ID_BITS = 6,
         end
 
         // Ensures that operands in prf are ready when we hit insertion
-        if(queue_inst_valid) begin
+        if(inst_valid) begin
             prf_read_enable = prn_input_ready; 
             prf_read_prn = prn_input;
         end
 
-        queue_full = queue_state.and != EMPTY_STATE; // TODO make sure this reduction is valid in verilator, see IEEE 1800-2017 7.12.3
+        queue_ready = queue_state.and == EMPTY_STATE; // TODO make sure this reduction is valid in verilator, see IEEE 1800-2017 7.12.3
         
     end
 
     logic [$clog2(QUEUE_SIZE): 0] entry_count;
     logic [$clog2(QUEUE_SIZE) - 1: 0] index;
 
-    always_ff @(posedge clk) begin
-        if(rst) begin
+    always_ff @(posedge ctrl.clk) begin
+        if(ctrl.rst) begin
             for(int i = 0; i < QUEUE_SIZE; i++) begin
                 queue_state[i] <= EMPTY_STATE;
                 queue[i] <= '0;

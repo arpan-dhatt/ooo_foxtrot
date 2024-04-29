@@ -212,6 +212,14 @@ rob reorder_buffer (
     .stall_rename(rob_to_renamer_stall_rename)
 );
 
+// inst_router router();
+
+// arith_fuq_wrap arith_fuq();
+// dpi_fuq_wrap dpi_fuq();
+// logical_fuq_wrap logical_fuq();
+// lsu_fuq_wrap lsu_fuq();
+
+
 // cycle counter
 int c = 0;
 always @(posedge clk) begin
