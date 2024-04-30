@@ -28,9 +28,9 @@ module lsu_fuq_wrap #(
     input logic [PRN_BITS-1:0] set_prn[FU_COUNT - 1][MAX_OPERANDS],
 
     // Register File ports
-    input logic [63:0] prf_op[max_operands],
-    output logic prf_read_enable[max_operands],
-    output logic [PRN_BITS-1:0] prf_read_prn[max_operands],
+    input logic [63:0] prf_op[MAX_OPERANDS],
+    output logic prf_read_enable[MAX_OPERANDS],
+    output logic [PRN_BITS-1:0] prf_read_prn[MAX_OPERANDS],
 
     // Output arguments
     output logic [PRN_BITS-1:0] fu_out_prn[MAX_OPERANDS],

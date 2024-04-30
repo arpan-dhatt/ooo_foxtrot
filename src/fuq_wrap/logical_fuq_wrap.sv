@@ -12,7 +12,7 @@ module logical_fuq_wrap #(
     // IQ control
     input logic inst_valid,
     output logic queue_ready,
-    
+
     // Input from instruction router
     input logic [INST_ID_BITS-1:0] inst_id,
     input logic [31:0] raw_instr,
@@ -23,14 +23,14 @@ module logical_fuq_wrap #(
     input logic prn_output_valid[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS],
 
-    // 
+    //
     input logic set_prn_ready[FU_COUNT - 1][MAX_OPERANDS],
     input logic [PRN_BITS-1:0] set_prn[FU_COUNT - 1][MAX_OPERANDS],
 
     // Register File ports
-    input logic [63:0] prf_op[max_operands],
-    output logic prf_read_enable[max_operands],
-    output logic [PRN_BITS-1:0] prf_read_prn[max_operands],
+    input logic [63:0] prf_op[MAX_OPERANDS],
+    output logic prf_read_enable[MAX_OPERANDS],
+    output logic [PRN_BITS-1:0] prf_read_prn[MAX_OPERANDS],
 
     // // Output arguments
     output logic [PRN_BITS-1:0] fu_out_prn[MAX_OPERANDS],
@@ -57,7 +57,7 @@ module logical_fuq_wrap #(
             if(i == FU_INDEX) begin
                 full_set_prn[i] = fu_logical_inst.fu.fu_out_prn;
                 full_set_prn_ready[i] = fu_logical_inst.fu.fu_out_data_valid;
-                
+
             end else begin
                 full_set_prn[i] = set_prn[i - (i>FU_INDEX)];
                 full_set_prn_ready[i] = set_prn_ready[i - (i>FU_INDEX)];
