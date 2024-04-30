@@ -46,19 +46,15 @@ module fu_dpi (
       setcond = 1'b0;
       setrd = 1'b1;
     end else if (fu.inst[31] == ADR_31 && fu.inst[28:24] == ADR_2824) begin // ADR
-      s = fu.pc + {45'b0, inst[23:5]}; // add pc + imm
+      s = fu.pc + {45'b0, fu.inst[23:5]}; // add pc + imm
       setcond = 1'b0;
       setrd = 1'b1;
     end else if (fu.inst[31] == ADRP_31 && fu.inst[28:24] == ADRP_2824) begin // ADRP
-      b = {fu.pc + inst[23:5], 12'b0}; // add pc + imm, shift left by 12
+      b = {fu.pc + fu.inst[23:5], 12'b0}; // add pc + imm, shift left by 12
       setcond = 1'b0;
       setrd = 1'b1;
     end
-    s = a + b;
-    n = s[63];
-    z = ~(|s);
-    v = a[63]^b[63]^s[63]^c;
-  end
+    end
 
   always_ff @(posedge fu.clk)
   begin

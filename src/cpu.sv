@@ -28,12 +28,12 @@ localparam INST_ID_BITS = 6;
 
 localparam OP_R_PORTS = FU_COUNT;
 localparam OP_W_PORTS = FU_COUNT;
-logic prf_ren[MAX_OPERANDS][OP_R_PORTS];
-logic [PRN_BITS-1:0] prf_rprn[MAX_OPERANDS][OP_R_PORTS];
-logic [63:0] prf_rdata[MAX_OPERANDS][OP_R_PORTS];
-logic prf_wen[MAX_OPERANDS][OP_W_PORTS];
-logic [PRN_BITS-1:0] prf_wprn[MAX_OPERANDS][OP_W_PORTS];
-logic [63:0] prf_wdata[MAX_OPERANDS][OP_W_PORTS];
+logic prf_ren[OP_R_PORTS][MAX_OPERANDS];
+logic [PRN_BITS-1:0] prf_rprn[OP_R_PORTS][MAX_OPERANDS];
+logic [63:0] prf_rdata[OP_R_PORTS][MAX_OPERANDS];
+logic prf_wen[OP_W_PORTS][MAX_OPERANDS];
+logic [PRN_BITS-1:0] prf_wprn[OP_W_PORTS][MAX_OPERANDS];
+logic [63:0] prf_wdata[OP_W_PORTS][MAX_OPERANDS];
 prf #(OP_R_PORTS, OP_W_PORTS) reg_file (
     .clk(clk),
     .rst(rst),
@@ -225,13 +225,64 @@ begin
     stall_rename = rob_to_renamer_stall_rename || issue_queue_stall_rename;
 end
 
-// inst_router router();
+// instruction router
+// Additional wires for inst_router
+logic queue_ready[FU_COUNT];
+logic [INST_ID_BITS-1:0] fu_out_inst_ids[FU_COUNT];
+logic fu_out_inst_valid[FU_COUNT];
 
-// arith_fuq_wrap arith_fuq();
-// dpi_fuq_wrap dpi_fuq();
-// logical_fuq_wrap logical_fuq();
-// lsu_fuq_wrap lsu_fuq();
+inst_router #(
+    .INST_ID_BITS(INST_ID_BITS),
+    .PRN_BITS(PRN_BITS),
+    .MAX_OPERANDS(MAX_OPERANDS),
+    .QUEUE_SIZE(4),
+    .FU_COUNT(4),
+    .FUC_BITS(FUC_BITS)
+) inst_router_inst (
+    .clk(clk),
+    .rst(rst),
 
+    .input_inst_valid(renamer_output_valid),
+    .input_inst_id(renamer_inst_id),
+    .input_raw_instr(renamer_raw_instr),
+    .input_instr_pc(renamer_instr_pc),
+    .input_fu_choice(renamer_fu_choice),
+    .input_prn_input_valid(renamer_prn_input_valid),
+    .input_prn_input_ready(renamer_prn_input_ready),
+    .input_prn_input(renamer_prn_input),
+    .input_prn_output_valid(renamer_prn_output_valid),
+    .input_prn_output(renamer_prn_output),
+
+    .mem_ren(mem_ren),
+    .mem_raddr(mem_raddr),
+    .mem_rvalid(mem_rvalid),
+    .mem_rdata(mem_rdata),
+    .mem_wen(mem_wen),
+    .mem_waddr(mem_waddr),
+    .mem_wdata(mem_wdata),
+
+    .set_prn_ready(fus_prn_ready_valid),
+    .set_prn(fus_prn_ready),
+
+    .queue_ready(queue_ready),
+
+    .prf_op(prf_rdata),
+    .prf_read_enable(prf_ren),
+    .prf_read_prn(prf_rprn),
+    .prf_write_data(prf_wdata),
+    .prf_write_enable(prf_wen),
+    .prf_write_prn(prf_wprn),
+
+    .fu_out_inst_valid(fu_out_inst_valid),
+    .fu_out_inst_ids(fu_out_inst_ids)
+);
+
+// Connect inst_router outputs to ROB inputs
+assign fu_to_rob_out_inst_valid = fu_out_inst_valid;
+assign fu_to_rob_out_inst_ids = fu_out_inst_ids;
+
+// Stall renamer if rename_fu_choice queue is not ready
+assign issue_queue_stall_rename = !queue_ready[renamer_fu_choice];
 
 // cycle counter
 int c = 0;

@@ -2,6 +2,7 @@ module inst_router #(parameter INST_ID_BITS = 6,
                      parameter PRN_BITS = 6,
                      parameter MAX_OPERANDS = 3, 
                      parameter QUEUE_SIZE = 4,
+                     parameter FU_COUNT = 4,
                      parameter FUC_BITS = 2)
     (
     input logic clk,
@@ -27,12 +28,6 @@ module inst_router #(parameter INST_ID_BITS = 6,
     output logic mem_wen,           // Memory write enable signal
     output logic [63:0] mem_waddr,  // Memory write address
     output logic [63:0] mem_wdata,  // Memory write data
-    // To LSU, for when to retire stores
-    input logic retire_inst_valid,
-    input logic [INST_ID_BITS-1:0] retire_inst_id,
-    // If we flushed instead of retired
-    input logic retire_inst_flush,
-
 
     // prn ready bits from all functional units
     output logic set_prn_ready[FU_COUNT][MAX_OPERANDS],
@@ -72,21 +67,158 @@ DemuxChannel inst_demux[FU_COUNT];
 always_comb begin
     for (int i = 0; i < FU_COUNT; i++) begin
         if (input_inst_valid) begin
-            if (input_fu_choice == i) begin
+            if (input_fu_choice == FUC_BITS'(i)) begin
                 inst_demux[i].inst_valid = input_inst_valid;
                 inst_demux[i].inst_id = input_inst_id;
                 inst_demux[i].raw_instr = input_raw_instr;
                 inst_demux[i].instr_pc = input_instr_pc;
-                inst_demux[i].prn_input_valid = input_prn_input_valid;
-                inst_demux[i].prn_input_ready = input_prn_input_ready;
-                inst_demux[i].prn_input = input_prn_input;
-                inst_demux[i].prn_output_valid = input_prn_output_valid;
-                inst_demux[i].prn_output = input_prn_output;
+                for (int j = 0; j < MAX_OPERANDS; j++) begin
+                    inst_demux[i].prn_input_valid[j] = input_prn_input_valid[j];
+                    inst_demux[i].prn_input_ready[j] = input_prn_input_ready[j];
+                    inst_demux[i].prn_input[j] = input_prn_input[j];
+                    inst_demux[i].prn_output_valid[j] = input_prn_output_valid[j];
+                    inst_demux[i].prn_output[j] = input_prn_output[j];
+                end
             end else begin
                 inst_demux[i].inst_valid = '0;
             end
         end
     end
 end
+
+// Logical FU/Q
+logical_fuq_wrap #(
+    .INST_ID_BITS(INST_ID_BITS),
+    .PRN_BITS(PRN_BITS),
+    .MAX_OPERANDS(MAX_OPERANDS),
+    .FU_COUNT(FU_COUNT),
+    .FU_INDEX(0)
+) logical_fuq (
+    .clk(clk),
+    .rst(rst),
+    .inst_valid(inst_demux[0].inst_valid),
+    .queue_ready(queue_ready[0]),
+    .inst_id(inst_demux[0].inst_id),
+    .raw_instr(inst_demux[0].raw_instr),
+    .instr_pc(inst_demux[0].instr_pc),
+    .prn_input_valid(inst_demux[0].prn_input_valid),
+    .prn_input_ready(inst_demux[0].prn_input_ready),
+    .prn_input(inst_demux[0].prn_input),
+    .prn_output_valid(inst_demux[0].prn_output_valid),
+    .prn_output(inst_demux[0].prn_output),
+    .set_prn_ready(set_prn_ready[1:FU_COUNT-1]),
+    .set_prn(set_prn[1:FU_COUNT-1]),
+    .prf_op(prf_op[0]),
+    .prf_read_enable(prf_read_enable[0]),
+    .prf_read_prn(prf_read_prn[0]),
+    .prf_write(prf_write_data[0]),
+    .prf_write_enable(prf_write_enable[0]),
+    .prf_write_prn(prf_write_prn[0]),
+    .fu_out_inst_id(fu_out_inst_ids[0]),
+    .fu_out_valid(fu_out_inst_valid[0])
+);
+
+// LSU FU/Q
+lsu_fuq_wrap #(
+    .INST_ID_BITS(INST_ID_BITS),
+    .PRN_BITS(PRN_BITS),
+    .MAX_OPERANDS(MAX_OPERANDS),
+    .FU_COUNT(FU_COUNT),
+    .FU_INDEX(1)
+) lsu_fuq (
+    .clk(clk),
+    .rst(rst),
+    .inst_valid(inst_demux[1].inst_valid),
+    .queue_ready(queue_ready[1]),
+    .inst_id(inst_demux[1].inst_id),
+    .raw_instr(inst_demux[1].raw_instr),
+    .instr_pc(inst_demux[1].instr_pc),
+    .prn_input_valid(inst_demux[1].prn_input_valid),
+    .prn_input_ready(inst_demux[1].prn_input_ready),
+    .prn_input(inst_demux[1].prn_input),
+    .prn_output_valid(inst_demux[1].prn_output_valid),
+    .prn_output(inst_demux[1].prn_output),
+    .set_prn_ready({set_prn_ready[0], set_prn_ready[2:FU_COUNT-1]}),
+    .set_prn({set_prn[0], set_prn[2:FU_COUNT-1]}),
+    .prf_op(prf_op[1]),
+    .prf_read_enable(prf_read_enable[1]),
+    .prf_read_prn(prf_read_prn[1]),
+    .prf_write(prf_write_data[1]),
+    .prf_write_enable(prf_write_enable[1]),
+    .prf_write_prn(prf_write_prn[1]),
+    .fu_out_inst_id(fu_out_inst_ids[1]),
+    .fu_out_valid(fu_out_inst_valid[1]),
+    .mem_ren(mem_ren),
+    .mem_raddr(mem_raddr),
+    .mem_rvalid(mem_rvalid),
+    .mem_rdata(mem_rdata),
+    .mem_wen(mem_wen),
+    .mem_waddr(mem_waddr),
+    .mem_wdata(mem_wdata)
+);
+
+// Arith FU/Q
+arith_fuq_wrap #(
+    .INST_ID_BITS(INST_ID_BITS),
+    .PRN_BITS(PRN_BITS),
+    .MAX_OPERANDS(MAX_OPERANDS),
+    .FU_COUNT(FU_COUNT),
+    .FU_INDEX(2)
+) arith_fuq (
+    .clk(clk),
+    .rst(rst),
+    .inst_valid(inst_demux[2].inst_valid),
+    .queue_ready(queue_ready[2]),
+    .inst_id(inst_demux[2].inst_id),
+    .raw_instr(inst_demux[2].raw_instr),
+    .instr_pc(inst_demux[2].instr_pc),
+    .prn_input_valid(inst_demux[2].prn_input_valid),
+    .prn_input_ready(inst_demux[2].prn_input_ready),
+    .prn_input(inst_demux[2].prn_input),
+    .prn_output_valid(inst_demux[2].prn_output_valid),
+    .prn_output(inst_demux[2].prn_output),
+    .set_prn_ready({set_prn_ready[0:1], set_prn_ready[3]}),
+    .set_prn({set_prn[0:1], set_prn[3]}),
+    .prf_op(prf_op[2]),
+    .prf_read_enable(prf_read_enable[2]),
+    .prf_read_prn(prf_read_prn[2]),
+    .prf_write(prf_write_data[2]),
+    .prf_write_enable(prf_write_enable[2]),
+    .prf_write_prn(prf_write_prn[2]),
+    .fu_out_inst_id(fu_out_inst_ids[2]),
+    .fu_out_valid(fu_out_inst_valid[2])
+);
+
+// DPI FU/Q
+dpi_fuq_wrap #(
+    .INST_ID_BITS(INST_ID_BITS),
+    .PRN_BITS(PRN_BITS),
+    .MAX_OPERANDS(MAX_OPERANDS),
+    .FU_COUNT(FU_COUNT),
+    .FU_INDEX(3)
+) dpi_fuq (
+    .clk(clk),
+    .rst(rst),
+    .inst_valid(inst_demux[3].inst_valid),
+    .queue_ready(queue_ready[3]),
+    .inst_id(inst_demux[3].inst_id),
+    .raw_instr(inst_demux[3].raw_instr),
+    .instr_pc(inst_demux[3].instr_pc),
+    .prn_input_valid(inst_demux[3].prn_input_valid),
+    .prn_input_ready(inst_demux[3].prn_input_ready),
+    .prn_input(inst_demux[3].prn_input),
+    .prn_output_valid(inst_demux[3].prn_output_valid),
+    .prn_output(inst_demux[3].prn_output),
+    .set_prn_ready(set_prn_ready[0:2]),
+    .set_prn(set_prn[0:2]),
+    .prf_op(prf_op[3]),
+    .prf_read_enable(prf_read_enable[3]),
+    .prf_read_prn(prf_read_prn[3]),
+    .prf_write(prf_write_data[3]),
+    .prf_write_enable(prf_write_enable[3]),
+    .prf_write_prn(prf_write_prn[3]),
+    .fu_out_inst_id(fu_out_inst_ids[3]),
+    .fu_out_valid(fu_out_inst_valid[3])
+);
 
 endmodule: inst_router

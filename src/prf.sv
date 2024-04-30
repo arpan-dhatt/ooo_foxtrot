@@ -12,13 +12,13 @@ module prf #(
     input logic rst,
 
     // Ports for read/write MAX_OPERANDS prf's at a time 
-    input logic op_ren[MAX_OPERANDS][OP_R_PORTS],
-    input logic [PRN_BITS-1:0] op_rprn[MAX_OPERANDS][OP_R_PORTS],
-    output logic [63:0] op_rdata[MAX_OPERANDS][OP_R_PORTS],
+    input logic op_ren[OP_R_PORTS][MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] op_rprn[OP_R_PORTS][MAX_OPERANDS],
+    output logic [63:0] op_rdata[OP_R_PORTS][MAX_OPERANDS],
 
-    input logic op_wen[MAX_OPERANDS][OP_W_PORTS],
-    input logic [PRN_BITS-1:0] op_wprn[MAX_OPERANDS][OP_W_PORTS],
-    input logic [63:0] op_wdata[MAX_OPERANDS][OP_W_PORTS]
+    input logic op_wen[OP_W_PORTS][MAX_OPERANDS],
+    input logic [PRN_BITS-1:0] op_wprn[OP_W_PORTS][MAX_OPERANDS],
+    input logic [63:0] op_wdata[OP_W_PORTS][MAX_OPERANDS]
 
     // ports for read/write one register at a time
     // input logic single_ren[S_R_PORTS],
