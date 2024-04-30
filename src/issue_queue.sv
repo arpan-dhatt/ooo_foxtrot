@@ -2,7 +2,8 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                      parameter PRN_BITS = 6,
                      parameter MAX_OPERANDS = 3,
                      parameter QUEUE_SIZE = 4, // power of 2
-                     parameter FU_COUNT = 4)
+                     parameter FU_COUNT = 4,
+                     parameter IN_ORDER = 0)
     (
     // Issue queue control
     input logic inst_valid,
@@ -49,8 +50,6 @@ module issue_queue #(parameter INST_ID_BITS = 6,
     } IQentry;
 
 
-    // This is separate from the queue entry because it is assigned combinatorally
-    logic entries_ready[0: QUEUE_SIZE - 1];
     IQentry queue[0: QUEUE_SIZE - 1];
 
     logic [$clog2(QUEUE_SIZE) - 1: 0]empty_slot;
@@ -58,52 +57,79 @@ module issue_queue #(parameter INST_ID_BITS = 6,
     logic has_ready_instruction;
     IQentry ready_instruction;
     logic [$clog2(QUEUE_SIZE) - 1: 0]ready_instruction_i;
-    always_comb begin
-        // Keep track of which queue entries are ready (and valid)
-        for(int i = 0; i < QUEUE_SIZE; i++) begin
-            entries_ready[i] = queue[i].valid && MAX_OPERANDS'(queue[i].op_ready) == MAX_OPERANDS'(queue[i].op_valid);
+    generate if (IN_ORDER) begin
+        logic [$clog2(QUEUE_SIZE) - 1: 0] head;
+        logic [$clog2(QUEUE_SIZE) - 1: 0] tail;
+        always_comb begin
+            ready_instruction_i = tail;
+            empty_slot = head;
+            queue_ready = !queue[head].valid;
+            ready_instruction = queue[tail];
+            has_ready_instruction = queue[tail].valid && MAX_OPERANDS'(queue[tail].op_ready) == MAX_OPERANDS'(queue[tail].op_valid);
         end
-
-        // Find the first ready instruction
-        has_ready_instruction = 0;
-        ready_instruction_i = 0;
-        ready_instruction = queue[ready_instruction_i];
-        for(int i = 0; i < QUEUE_SIZE; i++) begin
-            if(!has_ready_instruction && entries_ready[i]) begin
-                // inst_id, inst, op, out_prn, pc, inst_valid,
-                // ready_instruction.inst_id = queue[i].inst_id;
-                // ready_instruction.inst = queue[i].inst;
-                // ready_instruction.out_prn = queue[i].out_prn;
-                // ready_instruction.op_valid = queue[i].op_valid;
-                // ready_instruction.op_prn = queue[i].op_prn;
-                // ready_instruction.pc = queue[i].pc;
-                ready_instruction_i = 2'(i);
-                has_ready_instruction = 1;
-            end
-        end
-
-        // Ensures that operands in prf are ready when we hit insertion
-        for (int i = 0; i < MAX_OPERANDS; i++) begin
-            if (has_ready_instruction) begin
-                prf_read_enable[i] = ready_instruction.op_ready[i];
-                prf_read_prn[i] = ready_instruction.op_prn[i];
+        always_ff @(posedge ctrl.clk) begin
+            if (ctrl.rst) begin
+                head = 0;
+                tail = 0;
             end else begin
-                prf_read_enable[i] = 0;
-                prf_read_prn[i] = PRN_BITS'(0);
+                if(inst_valid && queue_ready) begin
+                    head <= head + 1;
+                end
+                if (ctrl.fu_ready && has_ready_instruction) begin
+                    tail <= tail + 1;
+                end
             end
         end
-
-        // Is there an open spot in the queue and what is the idx
-        queue_ready = 0;
-        empty_slot = 0;
-        for (int i = 0; i < QUEUE_SIZE; i++) begin
-            if (!queue_ready && !queue[i].valid) begin
-                queue_ready = 1;
-                empty_slot = $clog2(QUEUE_SIZE)'(i);
+    end else begin
+        // This is separate from the queue entry because it is assigned combinatorally
+        logic entries_ready[0: QUEUE_SIZE - 1];
+        always_comb begin
+            // Keep track of which queue entries are ready (and valid)
+            for(int i = 0; i < QUEUE_SIZE; i++) begin
+                entries_ready[i] = queue[i].valid && MAX_OPERANDS'(queue[i].op_ready) == MAX_OPERANDS'(queue[i].op_valid);
             end
-        end
 
-    end
+            // Find the first ready instruction
+            has_ready_instruction = 0;
+            ready_instruction_i = 0;
+            ready_instruction = queue[ready_instruction_i];
+            for(int i = 0; i < QUEUE_SIZE; i++) begin
+                if(!has_ready_instruction && entries_ready[i]) begin
+                    // inst_id, inst, op, out_prn, pc, inst_valid,
+                    // ready_instruction.inst_id = queue[i].inst_id;
+                    // ready_instruction.inst = queue[i].inst;
+                    // ready_instruction.out_prn = queue[i].out_prn;
+                    // ready_instruction.op_valid = queue[i].op_valid;
+                    // ready_instruction.op_prn = queue[i].op_prn;
+                    // ready_instruction.pc = queue[i].pc;
+                    ready_instruction_i = 2'(i);
+                    has_ready_instruction = 1;
+                end
+            end
+
+            // Ensures that operands in prf are ready when we hit insertion
+            for (int i = 0; i < MAX_OPERANDS; i++) begin
+                if (has_ready_instruction) begin
+                    prf_read_enable[i] = ready_instruction.op_ready[i];
+                    prf_read_prn[i] = ready_instruction.op_prn[i];
+                end else begin
+                    prf_read_enable[i] = 0;
+                    prf_read_prn[i] = PRN_BITS'(0);
+                end
+            end
+
+            // Is there an open spot in the queue and what is the idx
+            queue_ready = 0;
+            empty_slot = 0;
+            for (int i = 0; i < QUEUE_SIZE; i++) begin
+                if (!queue_ready && !queue[i].valid) begin
+                    queue_ready = 1;
+                    empty_slot = $clog2(QUEUE_SIZE)'(i);
+                end
+            end
+
+        end
+    end endgenerate
 
     always_ff @(posedge ctrl.clk) begin
         if(ctrl.rst) begin
