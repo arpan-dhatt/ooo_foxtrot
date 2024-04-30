@@ -34,7 +34,6 @@ module fu_arith (
       setcond = 1'b1;
       setrd = 1'b1;
     end else if (fu.inst[31:22] == SUB_31_22) begin // SUB
-      fu.fu_out_data[0] <= fu.op[0] + (~fu.inst[21:10] + 1); // Xn - imm12 = Xn + (~imm12 + 1)
       b = ~{{52{1'b0}}, fu.inst[21:10]} + 1;
       setcond = 1'b0;
       setrd = 1'b1;
@@ -42,6 +41,9 @@ module fu_arith (
       b = ~fu.op[1] + 1; // Xn - Xm = Xn + (~XM + 1)
       setcond = 1'b1;
       setrd = 1'(fu.inst[4:0] != CMP_04_00);
+    end else begin
+      // Invalid instruction, shouldn't happen but make verilator happy
+      {b, setcond, setrd} = '0;
     end
     {c, s} = a + b;
     n = s[63];
@@ -68,6 +70,8 @@ module fu_arith (
       fu.fu_out_valid <= fu.inst_valid;
       fu.fu_out_inst_id <= fu.inst_id;
       fu.fu_out_valid <= 1;
+    end else begin
+      fu.fu_out_valid <= 0;
     end
   end
 
