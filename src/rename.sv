@@ -35,7 +35,9 @@ module rename #(
     // stuff overwritten by instruction for the ROB (will commit them)
     output logic mapping_inputs_valid[MAX_OPERANDS],
     output logic [PRN_BITS-1:0] mapping_inputs_prn[MAX_OPERANDS],
-    output logic [ARN_BITS-1:0] mapping_inputs_arn[MAX_OPERANDS]
+    output logic [ARN_BITS-1:0] mapping_inputs_arn[MAX_OPERANDS],
+
+    input logic stall
 );
 
 localparam MO_BITS = $clog2(MAX_OPERANDS);
@@ -136,7 +138,7 @@ always_ff @(posedge clk)
             remap_file[i].ready <= i < PREALLOC_PRS;
             remap_file[i].prn <= PRN_BITS'(i);
         end
-    end else if (input_valid && mapping_valid) begin // check state change requested and valid
+    end else if (input_valid && mapping_valid && !stall) begin // check state change requested and valid
         // update remap file with newly requested PRN's
         for (int i = 0; i < MAX_OPERANDS; i++) begin
             if (arn_valid[i]) begin

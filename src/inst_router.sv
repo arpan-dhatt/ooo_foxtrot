@@ -17,7 +17,7 @@ module inst_router #(parameter INST_ID_BITS = 6,
     input logic input_prn_input_ready[MAX_OPERANDS],
     input logic [PRN_BITS-1:0] input_prn_input[MAX_OPERANDS],
     input logic input_prn_output_valid[MAX_OPERANDS],
-    input logic [PRN_BITS-1:0] input_prn_output[MAX_OPERANDS]
+    input logic [PRN_BITS-1:0] input_prn_output[MAX_OPERANDS],
 
     // LSU memory read/write passthrough
     output logic mem_ren,           // Memory read enable signal
@@ -51,22 +51,22 @@ module inst_router #(parameter INST_ID_BITS = 6,
     output logic [PRN_BITS-1:0] prf_write_prn[FU_COUNT][MAX_OPERANDS],
 
     // out instruction_ids for each functional unit
-    output logic fu_out_inst_valid[FU_COUNT]
+    output logic fu_out_inst_valid[FU_COUNT],
     output logic [INST_ID_BITS-1:0] fu_out_inst_ids[FU_COUNT]
 );
 
 typedef struct {
-    logic inst_valid,
-    logic [INST_ID_BITS-1:0] inst_id,
-    logic [31:0] raw_instr,
-    logic [63:0] instr_pc,
-    logic prn_input_valid[MAX_OPERANDS],
-    logic prn_input_ready[MAX_OPERANDS],
-    logic [PRN_BITS-1:0] prn_input[MAX_OPERANDS],
-    logic prn_output_valid[MAX_OPERANDS],
-    logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS]
+    logic inst_valid;
+    logic [INST_ID_BITS-1:0] inst_id;
+    logic [31:0] raw_instr;
+    logic [63:0] instr_pc;
+    logic prn_input_valid[MAX_OPERANDS];
+    logic prn_input_ready[MAX_OPERANDS];
+    logic [PRN_BITS-1:0] prn_input[MAX_OPERANDS];
+    logic prn_output_valid[MAX_OPERANDS];
+    logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS];
 } DemuxChannel;
-logic DemuxChannel inst_demux[FU_COUNT]; 
+DemuxChannel inst_demux[FU_COUNT]; 
 
 // instruction routing
 always_comb begin

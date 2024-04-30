@@ -19,7 +19,9 @@ module fed_stage #(
     output logic [63:0] instr_pc,
     output logic [FUC_BITS-1:0] fu_choice,
     output logic [ARN_BITS-1:0] arn_inputs[MAX_OPERANDS],
-    output logic [ARN_BITS-1:0] arn_outputs[MAX_OPERANDS]
+    output logic [ARN_BITS-1:0] arn_outputs[MAX_OPERANDS],
+
+    input logic stall
 );
 
 localparam FUC_BITS = $clog2(FU_COUNT);
@@ -64,7 +66,7 @@ begin
         // move the program counter and flush buffers
         irb_valid <= 0;
         pc <= set_pc;
-    end else begin
+    end else if (!stall) begin
         if (!irb_valid || (pc & 'b111) == 0) begin
             // read if irb empty or pc is aligned (every other cycle)
             mem_ren <= 1;

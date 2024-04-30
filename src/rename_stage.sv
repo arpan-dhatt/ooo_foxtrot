@@ -48,7 +48,10 @@ module rename_stage #(
     // stuff overwritten by instruction for the ROB (will commit them)
     output logic mapping_inputs_valid[MAX_OPERANDS],
     output logic [PRN_BITS-1:0] mapping_inputs_prn[MAX_OPERANDS],
-    output logic [ARN_BITS-1:0] mapping_inputs_arn[MAX_OPERANDS]
+    output logic [ARN_BITS-1:0] mapping_inputs_arn[MAX_OPERANDS],
+
+    input logic stall,
+    output logic stall_fed
 );
 
 localparam FUC_BITS = $clog2(FU_COUNT);
@@ -67,6 +70,8 @@ logic [ARN_BITS-1:0] renamer_mapping_inputs_arn[MAX_OPERANDS];
 always_comb
 begin
     mapping_valid_comb = renamer_mapping_valid;
+    // stall fed if fed gave good instr AND mapping invalid (structural hazard) OR we're being stalled
+    stall_fed = instr_valid && (!mapping_valid_comb || stall);
 end
 
 rename #(ARN_BITS, PRN_BITS, FU_COUNT, MAX_OPERANDS) renamer (
@@ -94,7 +99,8 @@ rename #(ARN_BITS, PRN_BITS, FU_COUNT, MAX_OPERANDS) renamer (
 
     .mapping_inputs_valid(renamer_mapping_inputs_valid),
     .mapping_inputs_prn(renamer_mapping_inputs_prn),
-    .mapping_inputs_arn(renamer_mapping_inputs_arn)
+    .mapping_inputs_arn(renamer_mapping_inputs_arn),
+    .stall(stall)
 );
 
 always_ff @(posedge clk) begin
