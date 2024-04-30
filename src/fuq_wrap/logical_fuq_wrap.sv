@@ -1,10 +1,10 @@
 
 module logical_fuq_wrap #(
-    parameter FU_INDEX = 2,
     parameter INST_ID_BITS = 6,
     parameter PRN_BITS = 6,
     parameter MAX_OPERANDS = 3,
-    parameter FU_COUNT = 4
+    parameter FU_COUNT = 4,
+    parameter FU_INDEX = 0
     ) (
     input logic clk,
     input logic rst,
@@ -28,9 +28,9 @@ module logical_fuq_wrap #(
     input logic [PRN_BITS-1:0] set_prn[FU_COUNT - 1][MAX_OPERANDS],
 
     // Register File ports
-    input logic prf_op[MAX_OPERANDS],
-    output logic [PRN_BITS-1:0] prf_read_enable[MAX_OPERANDS],
-    output logic [63:0] prf_read_prn[MAX_OPERANDS],
+    input logic [63:0] prf_op[max_operands],
+    output logic prf_read_enable[max_operands],
+    output logic [PRN_BITS-1:0] prf_read_prn[max_operands],
 
     // // Output arguments
     output logic [PRN_BITS-1:0] fu_out_prn[MAX_OPERANDS],
