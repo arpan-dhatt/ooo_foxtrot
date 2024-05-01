@@ -50,37 +50,43 @@ module inst_router #(parameter INST_ID_BITS = 6,
     output logic [INST_ID_BITS-1:0] fu_out_inst_ids[FU_COUNT]
 );
 
-typedef struct {
-    logic inst_valid;
-    logic [INST_ID_BITS-1:0] inst_id;
-    logic [31:0] raw_instr;
-    logic [63:0] instr_pc;
-    logic prn_input_valid[MAX_OPERANDS];
-    logic prn_input_ready[MAX_OPERANDS];
-    logic [PRN_BITS-1:0] prn_input[MAX_OPERANDS];
-    logic prn_output_valid[MAX_OPERANDS];
-    logic [PRN_BITS-1:0] prn_output[MAX_OPERANDS];
-} DemuxChannel;
-DemuxChannel inst_demux[FU_COUNT]; 
+logic inst_valid_inst_demux[FU_COUNT];
+logic [INST_ID_BITS-1:0] inst_id_inst_demux[FU_COUNT];
+logic [31:0] raw_instr_inst_demux[FU_COUNT];
+logic [63:0] instr_pc_inst_demux[FU_COUNT];
+logic prn_input_valid_inst_demux[FU_COUNT][MAX_OPERANDS];
+logic prn_input_ready_inst_demux[FU_COUNT][MAX_OPERANDS];
+logic [PRN_BITS-1:0] prn_input_inst_demux[FU_COUNT][MAX_OPERANDS];
+logic prn_output_valid_inst_demux[FU_COUNT][MAX_OPERANDS];
+logic [PRN_BITS-1:0] prn_output_inst_demux[FU_COUNT][MAX_OPERANDS];
 
 // instruction routing
 always_comb begin
     for (int i = 0; i < FU_COUNT; i++) begin
+        inst_valid_inst_demux[i] = '0;
+        inst_id_inst_demux[i] = '0;
+        raw_instr_inst_demux[i] = '0;
+        instr_pc_inst_demux[i] = '0;
+        for (int j = 0; j < MAX_OPERANDS; j++) begin
+            prn_input_valid_inst_demux[i][j] = '0;
+            prn_input_ready_inst_demux[i][j] = '0;
+            prn_input_inst_demux[i][j] = '0;
+            prn_output_valid_inst_demux[i][j] = '0;
+            prn_output_inst_demux[i][j] = '0;
+        end
         if (input_inst_valid) begin
             if (input_fu_choice == FUC_BITS'(i)) begin
-                inst_demux[i].inst_valid = input_inst_valid;
-                inst_demux[i].inst_id = input_inst_id;
-                inst_demux[i].raw_instr = input_raw_instr;
-                inst_demux[i].instr_pc = input_instr_pc;
+                inst_valid_inst_demux[i] = input_inst_valid;
+                inst_id_inst_demux[i] = input_inst_id;
+                raw_instr_inst_demux[i] = input_raw_instr;
+                instr_pc_inst_demux[i] = input_instr_pc;
                 for (int j = 0; j < MAX_OPERANDS; j++) begin
-                    inst_demux[i].prn_input_valid[j] = input_prn_input_valid[j];
-                    inst_demux[i].prn_input_ready[j] = input_prn_input_ready[j];
-                    inst_demux[i].prn_input[j] = input_prn_input[j];
-                    inst_demux[i].prn_output_valid[j] = input_prn_output_valid[j];
-                    inst_demux[i].prn_output[j] = input_prn_output[j];
+                    prn_input_valid_inst_demux[i][j] = input_prn_input_valid[j];
+                    prn_input_ready_inst_demux[i][j] = input_prn_input_ready[j];
+                    prn_input_inst_demux[i][j] = input_prn_input[j];
+                    prn_output_valid_inst_demux[i][j] = input_prn_output_valid[j];
+                    prn_output_inst_demux[i][j] = input_prn_output[j];
                 end
-            end else begin
-                inst_demux[i].inst_valid = '0;
             end
         end
     end
@@ -96,16 +102,16 @@ logical_fuq_wrap #(
 ) logical_fuq (
     .clk(clk),
     .rst(rst),
-    .inst_valid(inst_demux[0].inst_valid),
+    .inst_valid(inst_valid_inst_demux[0]),
     .queue_ready(queue_ready[0]),
-    .inst_id(inst_demux[0].inst_id),
-    .raw_instr(inst_demux[0].raw_instr),
-    .instr_pc(inst_demux[0].instr_pc),
-    .prn_input_valid(inst_demux[0].prn_input_valid),
-    .prn_input_ready(inst_demux[0].prn_input_ready),
-    .prn_input(inst_demux[0].prn_input),
-    .prn_output_valid(inst_demux[0].prn_output_valid),
-    .prn_output(inst_demux[0].prn_output),
+    .inst_id(inst_id_inst_demux[0]),
+    .raw_instr(raw_instr_inst_demux[0]),
+    .instr_pc(instr_pc_inst_demux[0]),
+    .prn_input_valid(prn_input_valid_inst_demux[0]),
+    .prn_input_ready(prn_input_ready_inst_demux[0]),
+    .prn_input(prn_input_inst_demux[0]),
+    .prn_output_valid(prn_output_valid_inst_demux[0]),
+    .prn_output(prn_output_inst_demux[0]),
     .set_prn_ready(set_prn_ready[1:FU_COUNT-1]),
     .set_prn(set_prn[1:FU_COUNT-1]),
     .prf_op(prf_op[0]),
@@ -128,16 +134,16 @@ lsu_fuq_wrap #(
 ) lsu_fuq (
     .clk(clk),
     .rst(rst),
-    .inst_valid(inst_demux[1].inst_valid),
+    .inst_valid(inst_valid_inst_demux[1]),
     .queue_ready(queue_ready[1]),
-    .inst_id(inst_demux[1].inst_id),
-    .raw_instr(inst_demux[1].raw_instr),
-    .instr_pc(inst_demux[1].instr_pc),
-    .prn_input_valid(inst_demux[1].prn_input_valid),
-    .prn_input_ready(inst_demux[1].prn_input_ready),
-    .prn_input(inst_demux[1].prn_input),
-    .prn_output_valid(inst_demux[1].prn_output_valid),
-    .prn_output(inst_demux[1].prn_output),
+    .inst_id(inst_id_inst_demux[1]),
+    .raw_instr(raw_instr_inst_demux[1]),
+    .instr_pc(instr_pc_inst_demux[1]),
+    .prn_input_valid(prn_input_valid_inst_demux[1]),
+    .prn_input_ready(prn_input_ready_inst_demux[1]),
+    .prn_input(prn_input_inst_demux[1]),
+    .prn_output_valid(prn_output_valid_inst_demux[1]),
+    .prn_output(prn_output_inst_demux[1]),
     .set_prn_ready({set_prn_ready[0], set_prn_ready[2:FU_COUNT-1]}),
     .set_prn({set_prn[0], set_prn[2:FU_COUNT-1]}),
     .prf_op(prf_op[1]),
@@ -167,16 +173,16 @@ arith_fuq_wrap #(
 ) arith_fuq (
     .clk(clk),
     .rst(rst),
-    .inst_valid(inst_demux[2].inst_valid),
+    .inst_valid(inst_valid_inst_demux[2]),
     .queue_ready(queue_ready[2]),
-    .inst_id(inst_demux[2].inst_id),
-    .raw_instr(inst_demux[2].raw_instr),
-    .instr_pc(inst_demux[2].instr_pc),
-    .prn_input_valid(inst_demux[2].prn_input_valid),
-    .prn_input_ready(inst_demux[2].prn_input_ready),
-    .prn_input(inst_demux[2].prn_input),
-    .prn_output_valid(inst_demux[2].prn_output_valid),
-    .prn_output(inst_demux[2].prn_output),
+    .inst_id(inst_id_inst_demux[2]),
+    .raw_instr(raw_instr_inst_demux[2]),
+    .instr_pc(instr_pc_inst_demux[2]),
+    .prn_input_valid(prn_input_valid_inst_demux[2]),
+    .prn_input_ready(prn_input_ready_inst_demux[2]),
+    .prn_input(prn_input_inst_demux[2]),
+    .prn_output_valid(prn_output_valid_inst_demux[2]),
+    .prn_output(prn_output_inst_demux[2]),
     .set_prn_ready({set_prn_ready[0:1], set_prn_ready[3]}),
     .set_prn({set_prn[0:1], set_prn[3]}),
     .prf_op(prf_op[2]),
@@ -199,16 +205,16 @@ dpi_fuq_wrap #(
 ) dpi_fuq (
     .clk(clk),
     .rst(rst),
-    .inst_valid(inst_demux[3].inst_valid),
+    .inst_valid(inst_valid_inst_demux[3]),
     .queue_ready(queue_ready[3]),
-    .inst_id(inst_demux[3].inst_id),
-    .raw_instr(inst_demux[3].raw_instr),
-    .instr_pc(inst_demux[3].instr_pc),
-    .prn_input_valid(inst_demux[3].prn_input_valid),
-    .prn_input_ready(inst_demux[3].prn_input_ready),
-    .prn_input(inst_demux[3].prn_input),
-    .prn_output_valid(inst_demux[3].prn_output_valid),
-    .prn_output(inst_demux[3].prn_output),
+    .inst_id(inst_id_inst_demux[3]),
+    .raw_instr(raw_instr_inst_demux[3]),
+    .instr_pc(instr_pc_inst_demux[3]),
+    .prn_input_valid(prn_input_valid_inst_demux[3]),
+    .prn_input_ready(prn_input_ready_inst_demux[3]),
+    .prn_input(prn_input_inst_demux[3]),
+    .prn_output_valid(prn_output_valid_inst_demux[3]),
+    .prn_output(prn_output_inst_demux[3]),
     .set_prn_ready(set_prn_ready[0:2]),
     .set_prn(set_prn[0:2]),
     .prf_op(prf_op[3]),
