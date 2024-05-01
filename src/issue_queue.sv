@@ -192,7 +192,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
 
                 queue[ready_instruction_i].valid <= '0; // Empty the entry
 
-                $display("Issue Queue (%d) Dispatched Instruction:", FU_INDEX);
+                $display("Issue Queue (%d) Issued Instruction:", FU_INDEX);
                 $display("  Instruction ID: %d", ready_instruction.inst_id);
                 $display("  Raw Instruction: %h", ready_instruction.inst);
                 $display("  Instruction PC: %h", ready_instruction.pc);
