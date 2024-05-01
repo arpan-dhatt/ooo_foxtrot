@@ -177,7 +177,7 @@ rename_stage renamer (
     .mapping_inputs_prn(renamer_to_rob_mapping_inputs_prn),
     .mapping_inputs_arn(renamer_to_rob_mapping_inputs_arn),
 
-    .stall(rob_to_renamer_stall_rename),
+    .stall(stall_rename),
     .stall_fed(stall_fed)
 );
 
@@ -320,6 +320,9 @@ always @(posedge clk) begin
                 $display("  Reason: ROB Stalling Renamer");
             end else if (issue_queue_stall_rename) begin
                 $display("  Reason: Issue Queues Stalling Renamer");
+                $display("  Culprit Issue Queue (%d):", renamer_fu_choice);
+                $display("    Instruction ID: %d", renamer_inst_id);
+                $display("    Raw Instruction: %h", renamer_raw_instr);
             end
         end else begin
             $display("Renamer Outputs:");
@@ -344,17 +347,20 @@ always @(posedge clk) begin
     if(mem_ren) begin
         $display("Memory Read Enable");
         $display("  Read Address: %h", mem_raddr);
+        $display("------------------------------");
     end
 
     if(mem_rvalid) begin
         $display("Memory Read Valid");
         $display("  Read Data: %h", mem_rdata);
+        $display("------------------------------");
     end
 
     if(mem_wen) begin
         $display("Memory Write");
         $display("  Write Address: %h", mem_waddr);
         $display("  Write Data: %h", mem_wdata);
+        $display("------------------------------");
     end
 
 end

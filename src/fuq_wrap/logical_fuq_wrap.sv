@@ -71,6 +71,7 @@ module logical_fuq_wrap #(
         .MAX_OPERANDS(MAX_OPERANDS),
         .QUEUE_SIZE(4),
         .FU_COUNT(FU_COUNT),
+        .FU_INDEX(FU_INDEX),
         .IN_ORDER(0)
     ) logical_queue (
         .inst_valid(inst_valid),
@@ -107,5 +108,13 @@ module logical_fuq_wrap #(
     assign prf_write_prn = fu_if_inst.fu_out_prn;
     assign fu_out_inst_id = fu_if_inst.fu_out_inst_id;
     assign fu_out_valid = fu_if_inst.fu_out_valid;
+
+    always_ff @(posedge clk)
+    begin
+        if (!rst && fu_if_inst.fu_out_valid) begin
+            $display("Logical FU Finished Instruction ID: %d", fu_if_inst.fu_out_inst_id);
+        end
+    end
+
 
 endmodule

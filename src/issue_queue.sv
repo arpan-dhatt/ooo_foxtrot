@@ -3,6 +3,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                      parameter MAX_OPERANDS = 3,
                      parameter QUEUE_SIZE = 4, // power of 2
                      parameter FU_COUNT = 4,
+                     parameter FU_INDEX = 0,
                      parameter IN_ORDER = 0)
     (
     // Issue queue control
@@ -133,6 +134,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
 
     always_ff @(posedge ctrl.clk) begin
         if(ctrl.rst) begin
+            $display("Resetting Issue Queue (%d)", FU_INDEX);
             for(int i = 0; i < QUEUE_SIZE; i++) begin
                 queue[i].valid <= '0;
                 queue[i].inst_id <= '0;
@@ -189,6 +191,12 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                 ctrl.inst_valid <= 1'b1;
 
                 queue[ready_instruction_i].valid <= '0; // Empty the entry
+
+                $display("Issue Queue (%d) Dispatched Instruction:", FU_INDEX);
+                $display("  Instruction ID: %d", ready_instruction.inst_id);
+                $display("  Raw Instruction: %h", ready_instruction.inst);
+                $display("  Instruction PC: %h", ready_instruction.pc);
+                $display("------------------------------");
             end else begin
                 ctrl.inst_valid <= '0;
             end

@@ -64,9 +64,11 @@ begin
             registers[i] <= 0;
         end
     end else begin
-        for (int i = 0; i < OP_R_PORTS; i++) begin
+        for (int i = 0; i < OP_W_PORTS; i++) begin
             for (int j = 0; j < MAX_OPERANDS; j++) begin
                 if (op_wen[i][j]) begin
+                    $display("PRN [%d] <= %d (port %d, op %d)", 
+                    op_wprn[i][j], op_wdata[i][j], i, j);
                     registers[op_wprn[i][j]] <= op_wdata[i][j];
                 end
             end
