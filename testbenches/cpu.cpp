@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     std::ostringstream mmio_output;
 
     int i = 0;
-    constexpr int MAX_CYCLES = 10;
+    constexpr int MAX_CYCLES = 16;
     while (!cpu->done && i < MAX_CYCLES) {
         // Cycle clock
         cpu->clk ^= 1;
