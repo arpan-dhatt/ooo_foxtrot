@@ -478,6 +478,8 @@ module inst_decoder #(
             instr_format = S_fmt;
             input_flag = 1'b0;
             output_flag = 1'b0;
+        end else begin
+            $display("Invalid Instruction: %h", raw_instr);
         end
       end else begin
         fu_choice = 0;

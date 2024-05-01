@@ -85,6 +85,8 @@ module fu_dpi (
       fu.fu_out_valid <= fu.inst_valid;
       fu.fu_out_inst_id <= fu.inst_id;
       fu.fu_out_valid <= 1;
+    end else begin
+      fu.fu_out_valid <= 0;
     end
   end
 
