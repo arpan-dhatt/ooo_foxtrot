@@ -66,8 +66,8 @@ begin
         // move the program counter and flush buffers
         irb_valid <= 0;
         pc <= set_pc;
-    end else if (!stall) begin
-        if (!irb_valid || (pc & 'b111) == 0) begin
+    end else begin
+        if ((!irb_valid || (pc & 'b111) == 0)) begin
             // read if irb empty or pc is aligned (every other cycle)
             mem_ren <= 1;
             mem_raddr <= pc & ~64'b111; // aligned read
@@ -80,7 +80,9 @@ begin
             irb <= mem_rdata;
         end
 
-        if (irb_valid) begin
+        if (stall) begin
+            // leave outputs the same
+        end else if (irb_valid) begin
             // irb_valid means we for sure have an instruction ready
             output_valid <= 1;
             raw_instr <= iraw_instr;

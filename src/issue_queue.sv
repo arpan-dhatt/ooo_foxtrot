@@ -163,6 +163,12 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                     queue[empty_slot].out_prn[i] <= prn_output[i];
                 end
                 queue[empty_slot].pc <= instr_pc;
+
+                $display("Issue Queue (%d) Received Instruction:", FU_INDEX);
+                $display("  Instruction ID: %d", inst_id);
+                $display("  Raw Instruction: %h", raw_instr);
+                $display("  Instruction PC: %h", instr_pc);
+                $display("------------------------------");
             end
 
             // Handle prn status update

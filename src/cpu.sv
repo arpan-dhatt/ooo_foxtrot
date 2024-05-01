@@ -294,21 +294,20 @@ always @(posedge clk) begin
     if (fed_output_valid) begin
         if (stall_fed) begin
             $display("[[FED STALLED]]");
-        end else begin
-            $display("  Raw Instruction: %h", fed_raw_instr);
-            $display("  Instruction PC: %h", fed_instr_pc);
-            $display("  FU Choice: %d", fed_fu_choice);
+        end 
+        $display("  Raw Instruction: %h", fed_raw_instr);
+        $display("  Instruction PC: %h", fed_instr_pc);
+        $display("  FU Choice: %d", fed_fu_choice);
 
-            $display("  ARN Inputs: {%d, %d, %d}",
-                        fed_arn_inputs[0],
-                        fed_arn_inputs[1],
-                        fed_arn_inputs[2]);
+        $display("  ARN Inputs: {%d, %d, %d}",
+                    fed_arn_inputs[0],
+                    fed_arn_inputs[1],
+                    fed_arn_inputs[2]);
 
-            $display("  ARN Outputs: {%d, %d, %d}",
-                        fed_arn_outputs[0],
-                        fed_arn_outputs[1],
-                        fed_arn_outputs[2]);
-        end
+        $display("  ARN Outputs: {%d, %d, %d}",
+                    fed_arn_outputs[0],
+                    fed_arn_outputs[1],
+                    fed_arn_outputs[2]);
 
         $display("------------------------------");
     end
@@ -321,25 +320,22 @@ always @(posedge clk) begin
             end else if (issue_queue_stall_rename) begin
                 $display("  Reason: Issue Queues Stalling Renamer");
                 $display("  Culprit Issue Queue (%d):", renamer_fu_choice);
-                $display("    Instruction ID: %d", renamer_inst_id);
-                $display("    Raw Instruction: %h", renamer_raw_instr);
             end
-        end else begin
-            $display("Renamer Outputs:");
-            $display("  Instruction ID: %d", renamer_inst_id);
-            $display("  Raw Instruction: %h", renamer_raw_instr);
-            $display("  Instruction PC: %h", renamer_instr_pc);
-            $display("  FU Choice: %d", renamer_fu_choice);
+        end 
+        $display("Renamer Outputs:");
+        $display("  Instruction ID: %d", renamer_inst_id);
+        $display("  Raw Instruction: %h", renamer_raw_instr);
+        $display("  Instruction PC: %h", renamer_instr_pc);
+        $display("  FU Choice: %d", renamer_fu_choice);
 
-            $display("  PRN Inputs: {Valid: {%b, %b, %b}, Ready: {%b, %b, %b}, PRN: {%d, %d, %d}}",
-                    renamer_prn_input_valid[0], renamer_prn_input_valid[1], renamer_prn_input_valid[2],
-                    renamer_prn_input_ready[0], renamer_prn_input_ready[1], renamer_prn_input_ready[2],
-                    renamer_prn_input[0], renamer_prn_input[1], renamer_prn_input[2]);
+        $display("  PRN Inputs: {Valid: {%b, %b, %b}, Ready: {%b, %b, %b}, PRN: {%d, %d, %d}}",
+                renamer_prn_input_valid[0], renamer_prn_input_valid[1], renamer_prn_input_valid[2],
+                renamer_prn_input_ready[0], renamer_prn_input_ready[1], renamer_prn_input_ready[2],
+                renamer_prn_input[0], renamer_prn_input[1], renamer_prn_input[2]);
 
-            $display("  PRN Outputs: {Valid: {%b, %b, %b}, PRN: {%d, %d, %d}}",
-                    renamer_prn_output_valid[0], renamer_prn_output_valid[1], renamer_prn_output_valid[2],
-                    renamer_prn_output[0], renamer_prn_output[1], renamer_prn_output[2]);
-        end
+        $display("  PRN Outputs: {Valid: {%b, %b, %b}, PRN: {%d, %d, %d}}",
+                renamer_prn_output_valid[0], renamer_prn_output_valid[1], renamer_prn_output_valid[2],
+                renamer_prn_output[0], renamer_prn_output[1], renamer_prn_output[2]);
 
         $display("------------------------------");
     end
