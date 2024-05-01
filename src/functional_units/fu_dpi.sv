@@ -18,8 +18,17 @@ module fu_dpi (
   logic [63:0] a, b, s;
   logic n, z, c, v;
   logic setcond, setrd;
-  logic hw, imm;
+  logic [1:0] hw;
+  logic [15:0] imm;
   always_comb begin // TODO for power efficiency, add a check for inst_valid
+  a = 64'b0;
+  b = 64'b0;
+  s = 64'b0;
+  hw = 2'b0;
+  imm = 16'b0;
+  setcond = 1'b0;
+  setrd = 1'b0;
+  if (fu.inst_valid) begin
     a = fu.op[0];
     if(fu.inst[31:23] == MOVK_3123) begin // MOVK
       s = a; // save old value of register
@@ -50,11 +59,12 @@ module fu_dpi (
       setcond = 1'b0;
       setrd = 1'b1;
     end else if (fu.inst[31] == ADRP_31 && fu.inst[28:24] == ADRP_2824) begin // ADRP
-      b = {fu.pc + fu.inst[23:5], 12'b0}; // add pc + imm, shift left by 12
+      b = {fu.pc + 64'(fu.inst[23:5])} << 12; // add pc + imm, shift left by 12
       setcond = 1'b0;
       setrd = 1'b1;
     end
-    end
+  end
+  end
 
   always_ff @(posedge fu.clk)
   begin
