@@ -40,12 +40,12 @@ module issue_queue #(parameter INST_ID_BITS = 6,
         logic [31:0] inst;
 
         // Operand metadata and values
-        logic                   op_valid[MAX_OPERANDS]; // Which operands are actually utilized
-        logic                   op_ready[MAX_OPERANDS]; // Which operands are satisfied
-        logic [PRN_BITS-1:0]    op_prn[MAX_OPERANDS]; // Which prn is it waiting on
+        logic [MAX_OPERANDS-1:0]               op_valid; // Which operands are actually utilized
+        logic [MAX_OPERANDS-1:0]               op_ready; // Which operands are satisfied
+        logic [MAX_OPERANDS-1:0][PRN_BITS-1:0] op_prn; // Which prn is it waiting on
 
         // Additional pass-through data
-        logic [PRN_BITS-1:0] out_prn[MAX_OPERANDS];  // Output physical register numbers
+        logic [MAX_OPERANDS-1:0][PRN_BITS-1:0] out_prn;  // Output physical register numbers
         logic [63:0] pc;  // Program counter
     } IQentry;
 
@@ -69,8 +69,8 @@ module issue_queue #(parameter INST_ID_BITS = 6,
         end
         always_ff @(posedge ctrl.clk) begin
             if (ctrl.rst) begin
-                head = 0;
-                tail = 0;
+                head <= 0;
+                tail <= 0;
             end else begin
                 if(inst_valid && queue_ready) begin
                     head <= head + 1;
