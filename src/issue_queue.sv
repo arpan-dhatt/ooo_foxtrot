@@ -137,11 +137,13 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                 queue[i].valid <= '0;
                 queue[i].inst_id <= '0;
                 queue[i].inst <= '0;
-                queue[i].op_valid <= '0;
-                queue[i].op_ready <= '0;
-                queue[i].op_prn <= '0;
-                queue[i].out_prn <= '0;
-                queue[i].pc <= '0;
+                for (int j = 0; j < MAX_OPERANDS; j++) begin
+                    queue[i].op_valid[j] <= '0;
+                    queue[i].op_ready[j] <= '0;
+                    queue[i].op_prn[j] <= '0;
+                    queue[i].out_prn[j] <= '0;
+                end
+               queue[i].pc <= '0;
             end
         end else begin
 
