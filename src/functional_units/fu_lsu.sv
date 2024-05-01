@@ -33,6 +33,8 @@ module fu_lsu(fu_if.fu iface,
         end else if (iface.inst_valid) begin
             iface.fu_ready <= 0;
             iface.fu_out_prn <= iface.out_prn;
+            iface.fu_out_prn_valid <= iface.out_prn_valid;
+            iface.fu_out_data_valid <= iface.out_prn_valid;
             iface.fu_out_inst_id <= iface.inst_id;
             //$display("%b", iface.inst);
             if (iface.inst[31:21] === LDUR) begin // ldur

@@ -61,6 +61,8 @@ module fu_arith (
       fu.fu_out_data[2] <= {{60{1'b0}}, n, z, c, v};
 
       fu.fu_out_prn <= fu.out_prn;
+      fu.fu_out_data_valid <= fu.out_prn_valid;
+      fu.fu_out_prn_valid <= fu.out_prn_valid;
 
       // Output 0 will not be valid on a cmp
       fu.fu_out_data_valid[0] <= setrd;

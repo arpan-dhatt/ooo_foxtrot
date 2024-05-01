@@ -47,6 +47,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
 
         // Additional pass-through data
         logic [MAX_OPERANDS-1:0][PRN_BITS-1:0] out_prn;  // Output physical register numbers
+        logic [MAX_OPERANDS-1:0] out_prn_valid;
         logic [63:0] pc;  // Program counter
     } IQentry;
 
@@ -161,6 +162,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                     queue[empty_slot].op_prn[i] <= prn_input[i];
 
                     queue[empty_slot].out_prn[i] <= prn_output[i];
+                    queue[empty_slot].out_prn_valid[i] <= prn_output_valid[i];
                 end
                 queue[empty_slot].pc <= instr_pc;
 
@@ -191,6 +193,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                 ctrl.op <= prf_op; // TODO Might need to handle 0 register
                 for (int i = 0; i < MAX_OPERANDS; i++) begin
                     ctrl.out_prn[i] <= ready_instruction.out_prn[i];
+                    ctrl.out_prn_valid[i] <= ready_instruction.out_prn_valid[i];
                 end
                 ctrl.pc <= ready_instruction.pc;
 

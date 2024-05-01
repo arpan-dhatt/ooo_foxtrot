@@ -186,6 +186,8 @@ module fu_logical (
 
       // everything does the same stuff below here
       fu.fu_out_prn <= fu.out_prn;
+      fu.fu_out_data_valid <= fu.out_prn_valid;
+      fu.fu_out_prn_valid <= fu.out_prn_valid;
       // ANDS will set flags so set fu_out_data_valid[2] to 1 in that case
       fu.fu_out_data_valid <= {1, 0, 1'(fu.inst[31:21] == ANDS3121 && fu.inst[15:10] == ANDS1510)};
       fu.fu_out_valid <= fu.inst_valid;

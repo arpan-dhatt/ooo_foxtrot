@@ -128,6 +128,9 @@ module lsu_fuq_wrap #(
     begin
         if (!rst && fu_if_inst.fu_out_valid) begin
             $display("LSU FU Finished Instruction ID: %d", fu_if_inst.fu_out_inst_id);
+            $display("  PRN Outputs: {Valid: {%b, %b, %b}, PRN: {%d, %d, %d}}",
+                    fu_if_inst.fu.fu_out_data_valid[0], fu_if_inst.fu.fu_out_data_valid[1], fu_if_inst.fu.fu_out_data_valid[2],
+                    fu_if_inst.fu.fu_out_prn[0], fu_if_inst.fu.fu_out_prn[1], fu_if_inst.fu.fu_out_prn[2]);
         end
     end
 

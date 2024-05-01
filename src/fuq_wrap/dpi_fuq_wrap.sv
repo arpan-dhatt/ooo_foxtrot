@@ -102,7 +102,7 @@ module dpi_fuq_wrap #(
     // make sure to only enable writes if output is also valid
     always_comb begin
         for (int i = 0; i < MAX_OPERANDS; i++) begin
-            prf_write_enable[i] = prn_output_valid[i] && fu_if_inst.fu_out_valid;
+            prf_write_enable[i] = fu_if_inst.fu_out_prn_valid[i] && fu_if_inst.fu_out_valid;
             prf_write_prn[i] = fu_if_inst.ctrl.fu_out_prn[i];
             prf_write[i] = fu_if_inst.ctrl.fu_out_data[i];
         end
@@ -117,8 +117,8 @@ module dpi_fuq_wrap #(
             $display("DPI FU Finished Instruction ID: %d", fu_if_inst.fu_out_inst_id);
 
             $display("  PRN Outputs: {Valid: {%b, %b, %b}, PRN: {%d, %d, %d}}",
-                    fu_if_inst.fu.fu_out_data_valid[0], fu_if_inst.fu.fu_out_data_valid[1], fu_if_inst.fu.fu_out_data_valid[2],
-                    fu_if_inst.fu.fu_out_prn[0], fu_if_inst.fu.fu_out_prn[1], fu_if_inst.fu.fu_out_prn[2]);
+                    fu_if_inst.fu_out_prn_valid[0], fu_if_inst.fu_out_prn_valid[1], fu_if_inst.fu_out_prn_valid[2],
+                    fu_if_inst.fu_out_prn[0], fu_if_inst.fu_out_prn[1], fu_if_inst.fu_out_prn[2]);
         end
     end
 

@@ -227,4 +227,21 @@ dpi_fuq_wrap #(
     .fu_out_valid(fu_out_inst_valid[3])
 );
 
+always_comb
+begin
+    for (int i = 0; i < FU_COUNT; i++) begin
+        for (int j = 0; j < MAX_OPERANDS; j++) begin
+            set_prn[i][j] = prf_write_prn[i][j];
+            set_prn_ready[i][j] = prf_write_enable[i][j];
+            if (prf_write_enable[i][j]) begin
+                $display("FU(%D)OP(%D) Readying PRN(%D)", i, j, prf_write_prn[i][j]);
+            end
+        end
+
+        if (fu_out_inst_valid[i]) begin
+            $display("FU(%d) Completed Instruction (ID %d)", i, fu_out_inst_ids[i]);
+        end
+    end
+end
+
 endmodule: inst_router
