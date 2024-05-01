@@ -186,7 +186,8 @@ rob reorder_buffer (
     .rst(rst),
 
     // Renamer dispatch
-    .inst_valid(renamer_output_valid_comb),
+    .inst_valid(renamer_output_valid_comb & !stall_rename),
+    // ^ renamer shouldn't dispatch (and ROB updates state) when it is being stalled
     .inst_ready(rob_inst_ready),
     .pc(renamer_instr_pc),
     .mapping_inputs_valid(renamer_to_rob_mapping_inputs_valid),
