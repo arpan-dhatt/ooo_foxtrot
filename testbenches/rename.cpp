@@ -7,6 +7,8 @@
 
 // Include common routines
 #include <verilated.h>
+#include <optional>
+
 
 #include "Vrename.h"
 

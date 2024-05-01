@@ -341,6 +341,22 @@ always @(posedge clk) begin
         $display("------------------------------");
     end
 
+    if(mem_ren) begin
+        $display("Memory Read Enable");
+        $display("  Read Address: %h", mem_raddr);
+    end
+
+    if(mem_rvalid) begin
+        $display("Memory Read Valid");
+        $display("  Read Data: %h", mem_rdata);
+    end
+
+    if(mem_wen) begin
+        $display("Memory Write");
+        $display("  Write Address: %h", mem_waddr);
+        $display("  Write Data: %h", mem_wdata);
+    end
+
 end
 
 endmodule

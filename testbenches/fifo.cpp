@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <optional>
 
 #include "Vfifo.h"
 
