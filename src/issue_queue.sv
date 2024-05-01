@@ -90,8 +90,8 @@ module issue_queue #(parameter INST_ID_BITS = 6,
             end
 
             // Find the first ready instruction
-            has_ready_instruction = 0;
-            ready_instruction_i = 0;
+            has_ready_instruction = '0;
+            ready_instruction_i = '0;
             ready_instruction = queue[ready_instruction_i];
             for(int i = 0; i < QUEUE_SIZE; i++) begin
                 if(!has_ready_instruction && entries_ready[i]) begin
@@ -113,14 +113,14 @@ module issue_queue #(parameter INST_ID_BITS = 6,
                     prf_read_enable[i] = ready_instruction.op_ready[i];
                     prf_read_prn[i] = ready_instruction.op_prn[i];
                 end else begin
-                    prf_read_enable[i] = 0;
-                    prf_read_prn[i] = PRN_BITS'(0);
+                    prf_read_enable[i] = '0;
+                    prf_read_prn[i] = '0;
                 end
             end
 
             // Is there an open spot in the queue and what is the idx
-            queue_ready = 0;
-            empty_slot = 0;
+            queue_ready = '0;
+            empty_slot = '0;
             for (int i = 0; i < QUEUE_SIZE; i++) begin
                 if (!queue_ready && !queue[i].valid) begin
                     queue_ready = 1;
@@ -134,7 +134,14 @@ module issue_queue #(parameter INST_ID_BITS = 6,
     always_ff @(posedge ctrl.clk) begin
         if(ctrl.rst) begin
             for(int i = 0; i < QUEUE_SIZE; i++) begin
-                queue[i] <= '0;
+                queue[i].valid <= '0;
+                queue[i].inst_id <= '0;
+                queue[i].inst <= '0;
+                queue[i].op_valid <= '0;
+                queue[i].op_ready <= '0;
+                queue[i].op_prn <= '0;
+                queue[i].out_prn <= '0;
+                queue[i].pc <= '0;
             end
         end else begin
 
@@ -179,7 +186,7 @@ module issue_queue #(parameter INST_ID_BITS = 6,
 
                 ctrl.inst_valid <= 1'b1;
 
-                queue[ready_instruction_i].valid <= 0; // Empty the entry
+                queue[ready_instruction_i].valid <= '0; // Empty the entry
             end else begin
                 ctrl.inst_valid <= '0;
             end
